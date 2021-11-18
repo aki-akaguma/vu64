@@ -51,7 +51,7 @@ assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
 
 # Changelogs
 
-[This crate's changelog here.](https://github.com/aki-akaguma/shamdb/blob/main/CHANGELOG.md)
+[This crate's changelog here.](https://github.com/aki-akaguma/vu64/blob/main/CHANGELOG.md)
 
 # References
 

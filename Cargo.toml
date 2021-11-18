@@ -1,9 +1,9 @@
 [package]
 name = "vu64"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["aki <aki.akaguma@hotmail.com>"]
 edition = "2018"
-description = "variable length encode/decode for 64 bits integer"
+description = "variable length encode/decode for a 64-bits integer"
 keywords = ["serialization", "varint", "integer"]
 categories = []
 license = "MIT OR Apache-2.0"
