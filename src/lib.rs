@@ -51,6 +51,8 @@ assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
 use core::convert::{TryFrom, TryInto};
 use core::fmt::{self, Debug, Display};
 
+pub mod signed;
+
 #[cfg(feature = "io")]
 pub mod io;
 
@@ -123,14 +125,12 @@ impl From<u64> for Vu64 {
     }
 }
 
-/*
 impl From<i64> for Vu64 {
     #[inline]
     fn from(value: i64) -> Vu64 {
         signed::zigzag::encode(value).into()
     }
 }
-*/
 
 impl TryFrom<&[u8]> for Vu64 {
     type Error = Error;
@@ -143,6 +143,27 @@ impl TryFrom<&[u8]> for Vu64 {
 
 /// Get the length of an encoded `vu64` for the given value in bytes.
 #[inline]
+pub fn encoded_len(value: u64) -> u8 {
+    let ldz = value.leading_zeros();
+    ENCODED_LEN_TBL[ldz as usize]
+}
+
+#[rustfmt::skip]
+static ENCODED_LEN_TBL: &[u8; 65] = &[
+    9,
+    9, 9, 9, 9, 9, 9, 9,
+    8, 8, 8, 8, 8, 8, 8,
+    7, 7, 7, 7, 7, 7, 7,
+    6, 6, 6, 6, 6, 6, 6,
+    5, 5, 5, 5, 5, 5, 5,
+    4, 4, 4, 4, 4, 4, 4,
+    3, 3, 3, 3, 3, 3, 3,
+    2, 2, 2, 2, 2, 2, 2,
+    1, 1, 1, 1, 1, 1, 1,
+    1,
+];
+
+/*
 pub fn encoded_len(value: u64) -> u8 {
     match value.leading_zeros() {
         57..=64 => 1,
@@ -171,6 +192,7 @@ pub fn encoded_len(value: u64) -> u8 {
         }
     }
 }
+*/
 
 /// Get the length of a `vu64` from the first byte.
 ///
@@ -181,7 +203,7 @@ pub fn decoded_len(byte: u8) -> u8 {
 }
 
 /// Encode an unsigned 64-bit integer as `vu64`.
-#[inline]
+//#[inline]
 pub fn encode(value: u64) -> Vu64 {
     let mut bytes = [0u8; MAX_BYTES];
     let length = encoded_len(value);
@@ -226,7 +248,8 @@ pub fn decode(bytes: &[u8]) -> Result<u64, Error> {
     }
     let length = decoded_len(bytes[0]);
     let result = decode_with_length(length, bytes)?;
-    check_result_with_length(length, result)
+    Ok(result)
+    //check_result_with_length(length, result)
 }
 
 #[inline]
@@ -238,7 +261,7 @@ pub fn check_result_with_length(length: u8, result: u64) -> Result<u64, Error> {
     }
 }
 
-#[inline]
+//#[inline]
 pub fn decode_with_length(length: u8, bytes: &[u8]) -> Result<u64, Error> {
     if bytes.len() < length as usize {
         return Err(Error::Truncated);
@@ -249,16 +272,31 @@ pub fn decode_with_length(length: u8, bytes: &[u8]) -> Result<u64, Error> {
         // 1-byte special case
         bytes[0] as u64
     } else if follow_len < 7 {
+        /*
         let mut encoded = [0u8; 8];
         encoded[..length as usize].copy_from_slice(&bytes[..length as usize]);
         let lsb = encoded[0] << length;
         let val = u64::from_le_bytes(encoded) & !0xFFu64;
         (val | lsb as u64) >> length
+        */
+        let mut val = 0u64;
+        for i in 1..(length as usize) {
+            val = val << 8 | bytes[(length as usize) - i] as u64;
+        }
+        let lsb = bytes[0] << length;
+        ((val << 8) | lsb as u64) >> length
     } else if follow_len == 7 {
         // 8-byte special case
+        /*
         let mut encoded = [0u8; 8];
         encoded[..7].copy_from_slice(&bytes[1..8]);
         u64::from_le_bytes(encoded)
+        */
+        let mut val = 0u64;
+        for i in 1..(length as usize) {
+            val = val << 8 | bytes[(length as usize) - i] as u64;
+        }
+        val
     } else if follow_len == 8 {
         // 9-byte special case
         u64::from_le_bytes(bytes[1..9].try_into().unwrap())
@@ -295,8 +333,7 @@ impl Display for Error {
 impl std::error::Error for Error {}
 
 #[cfg(test)]
-mod tests {
-    //use super::{decode, encode, signed};
+mod test_u64 {
     use super::{decode, encode, encoded_len};
     use super::{MAX_LEN1, MAX_LEN2, MAX_LEN3, MAX_LEN4, MAX_LEN5, MAX_LEN6, MAX_LEN7, MAX_LEN8};
     //
@@ -501,20 +538,6 @@ mod tests {
         );
         assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
     }
-    /*
-    #[test]
-    fn encode_signed_values() {
-        assert_eq!(
-            signed::encode(0x0f0f_f0f0).as_ref(),
-            &[0x10, 0x3c, 0xfc, 0xc3, 0x03]
-        );
-
-        assert_eq!(
-            signed::encode(-0x0f0f_f0f0).as_ref(),
-            &[0xf0, 0x3b, 0xfc, 0xc3, 0x03]
-        );
-    }
-    */
     #[test]
     fn decode_zero() {
         let slice = [0].as_ref();
@@ -551,16 +574,6 @@ mod tests {
         let slice = [0xF8, 0x00, 0x00, 0x00].as_ref();
         assert!(decode(slice).is_err());
     }
-    /*
-    #[test]
-    fn decode_signed_values() {
-        let mut slice = [0x10, 0x3c, 0xfc, 0xc3, 0x03].as_ref();
-        assert_eq!(signed::decode(&mut slice).unwrap(), 0x0f0f_f0f0);
-
-        let mut slice = [0xf0, 0x3b, 0xfc, 0xc3, 0x03].as_ref();
-        assert_eq!(signed::decode(&mut slice).unwrap(), -0x0f0f_f0f0);
-    }
-    */
     #[test]
     fn encode_all() {
         let mut val: u64 = 1;
