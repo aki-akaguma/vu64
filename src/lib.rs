@@ -571,6 +571,63 @@ mod test_u64 {
         }
     }
     #[test]
+    fn enc_dec_all_1byte() {
+        for val in 0..128 {
+            assert_eq!(encoded_len(val), 1);
+            assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        }
+    }
+    #[test]
+    fn enc_dec_all_2byte() {
+        for val in 128..16384 {
+            assert_eq!(encoded_len(val), 2);
+            assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        }
+    }
+    #[test]
+    fn enc_dec_all_3byte() {
+        for val in 16384..2097152 {
+            assert_eq!(encoded_len(val), 3);
+            assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        }
+    }
+    #[test]
+    fn enc_dec_sp1() {
+        let val = 0x06_6C80;
+        assert_eq!(encoded_len(val), 3);
+        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+    }
+    #[test]
+    fn enc_dec_sp2() {
+        let val = 136;
+        assert_eq!(encoded_len(val), 2);
+        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        //
+        let val = 288;
+        assert_eq!(encoded_len(val), 2);
+        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        //
+        let val = 569;
+        assert_eq!(encoded_len(val), 2);
+        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        //
+        let val = 1144;
+        assert_eq!(encoded_len(val), 2);
+        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        //
+        let val = 2296;
+        assert_eq!(encoded_len(val), 2);
+        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        //
+        let val = 4601;
+        assert_eq!(encoded_len(val), 2);
+        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        //
+        let val = 9209;
+        assert_eq!(encoded_len(val), 2);
+        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+    }
+    #[test]
     fn decode_err_truncated() {
         let slice = [0xF0].as_ref();
         assert!(decode(slice).is_err());
