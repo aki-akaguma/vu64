@@ -2,6 +2,11 @@ TBD
 ===
 Unreleased changes. Release notes have not yet been written.
 
+0.1.2 (2021-11-26)
+=====
+
+* adds more test code.
+
 0.1.1 (2021-11-18)
 =====
 
