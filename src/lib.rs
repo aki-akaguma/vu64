@@ -163,37 +163,6 @@ static ENCODED_LEN_TBL: &[u8; 65] = &[
     1,
 ];
 
-/*
-pub fn encoded_len(value: u64) -> u8 {
-    match value.leading_zeros() {
-        57..=64 => 1,
-        50..=56 => 2,
-        43..=49 => 3,
-        36..=42 => 4,
-
-        29..=35 => 5,
-        22..=28 => 6,
-        15..=21 => 7,
-        8..=14 => 8,
-        0..=7 => 9,
-        _ => {
-            // SAFETY:
-            //
-            // The `leading_zeros` intrinsic returns the number of bits that
-            // contain a zero bit. The result will always be in the range of
-            // 0..=64 for a `u64`, so the above pattern is exhaustive, however
-            // it is not exhaustive over the return type of `u32`. Because of
-            // this, we mark the "uncovered" part of the match as unreachable
-            // for performance reasons.
-            #[allow(unsafe_code)]
-            unsafe {
-                core::hint::unreachable_unchecked()
-            }
-        }
-    }
-}
-*/
-
 /// Get the length of a `vu64` from the first byte.
 ///
 /// NOTE: The returned value is inclusive of the first byte itself.
@@ -203,7 +172,6 @@ pub fn decoded_len(byte: u8) -> u8 {
 }
 
 /// Encode an unsigned 64-bit integer as `vu64`.
-//#[inline]
 pub fn encode(value: u64) -> Vu64 {
     let mut bytes = [0u8; MAX_BYTES];
     let length = encoded_len(value);
@@ -217,15 +185,6 @@ pub fn encode(value: u64) -> Vu64 {
         bytes[..8].copy_from_slice(&encoded.to_le_bytes());
         let b1st = bytes[0];
         bytes[0] = !((!(b1st >> 1)) >> follow_len);
-        /*
-        let mut encoded = value << length as u64;
-        bytes[0] = !((!((encoded & 0xFF) as u8 >> 1)) >> follow_len);
-        encoded >>= 8;
-        for i in 1..(length as usize) {
-            bytes[i] = (encoded & 0xFF) as u8;
-            encoded >>= 8;
-        }
-        */
     } else {
         bytes[1..].copy_from_slice(&value.to_le_bytes());
         if follow_len == 7 {
@@ -258,7 +217,30 @@ pub fn decode(bytes: &[u8]) -> Result<u64, Error> {
     let length = decoded_len(bytes[0]);
     let result = decode_with_length(length, bytes)?;
     Ok(result)
-    //check_result_with_length(length, result)
+}
+
+/// Decode a `v64`-encoded unsigned 64-bit integer.
+///
+/// Accepts a mutable reference to a slice containing the `v64`.
+/// Upon success, the reference is updated to begin at the byte immediately
+/// after the encoded `v64`.
+#[inline]
+pub fn decode2(first_byte: u8, follow_bytes: &[u8]) -> Result<u64, Error> {
+    let length = decoded_len(first_byte);
+    let result = decode_with_first_and_follow(length, first_byte, follow_bytes)?;
+    Ok(result)
+}
+
+/// Decode a `v64`-encoded unsigned 64-bit integer.
+///
+/// Accepts a mutable reference to a slice containing the `v64`.
+/// Upon success, the reference is updated to begin at the byte immediately
+/// after the encoded `v64`.
+#[inline]
+pub fn decode3(first_byte: u8, follow_le_max_8_bytes: u64) -> Result<u64, Error> {
+    let length = decoded_len(first_byte);
+    let result = decode_with_first_and_follow_le(length, first_byte, follow_le_max_8_bytes)?;
+    Ok(result)
 }
 
 #[inline]
@@ -270,7 +252,6 @@ pub fn check_result_with_length(length: u8, result: u64) -> Result<u64, Error> {
     }
 }
 
-//#[inline]
 pub fn decode_with_length(length: u8, bytes: &[u8]) -> Result<u64, Error> {
     if bytes.len() < length as usize {
         return Err(Error::Truncated);
@@ -281,13 +262,6 @@ pub fn decode_with_length(length: u8, bytes: &[u8]) -> Result<u64, Error> {
         // 1-byte special case
         bytes[0] as u64
     } else if follow_len < 7 {
-        /*
-        let mut encoded = [0u8; 8];
-        encoded[..length as usize].copy_from_slice(&bytes[..length as usize]);
-        let lsb = encoded[0] << length;
-        let val = u64::from_le_bytes(encoded) & !0xFFu64;
-        (val | lsb as u64) >> length
-        */
         let mut val = 0u64;
         let mut i = length as usize - 1;
         while i > 0 {
@@ -298,11 +272,6 @@ pub fn decode_with_length(length: u8, bytes: &[u8]) -> Result<u64, Error> {
         ((val << 8) | lsb as u64) >> length
     } else if follow_len == 7 {
         // 8-byte special case
-        /*
-        let mut encoded = [0u8; 8];
-        encoded[..7].copy_from_slice(&bytes[1..8]);
-        u64::from_le_bytes(encoded)
-        */
         let mut val = 0u64;
         let mut i = length as usize - 1;
         while i > 0 {
@@ -313,6 +282,79 @@ pub fn decode_with_length(length: u8, bytes: &[u8]) -> Result<u64, Error> {
     } else if follow_len == 8 {
         // 9-byte special case
         u64::from_le_bytes(bytes[1..9].try_into().unwrap())
+    } else {
+        #[allow(unsafe_code)]
+        unsafe {
+            core::hint::unreachable_unchecked()
+        }
+    };
+    //
+    debug_assert!(length == 1 || result >= (1 << (7 * (length - 1))));
+    Ok(result)
+}
+
+pub fn decode_with_first_and_follow(
+    length: u8,
+    first_byte: u8,
+    follow_bytes: &[u8],
+) -> Result<u64, Error> {
+    if follow_bytes.len() < length as usize - 1 {
+        return Err(Error::Truncated);
+    }
+    let follow_len = length - 1;
+    //
+    let result = if follow_len == 0 {
+        // 1-byte special case
+        first_byte as u64
+    } else if follow_len < 7 {
+        let mut val = 0u64;
+        let mut i = follow_len as i32 - 1;
+        while i >= 0 {
+            val = val << 8 | follow_bytes[i as usize] as u64;
+            i -= 1;
+        }
+        let lsb = first_byte << length;
+        ((val << 8) | lsb as u64) >> length
+    } else if follow_len == 7 {
+        // 8-byte special case
+        let mut val = 0u64;
+        let mut i = follow_len as i32 - 1;
+        while i >= 0 {
+            val = val << 8 | follow_bytes[i as usize] as u64;
+            i -= 1;
+        }
+        val
+    } else if follow_len == 8 {
+        // 9-byte special case
+        u64::from_le_bytes(follow_bytes[0..8].try_into().unwrap())
+    } else {
+        #[allow(unsafe_code)]
+        unsafe {
+            core::hint::unreachable_unchecked()
+        }
+    };
+    //
+    debug_assert!(length == 1 || result >= (1 << (7 * (length - 1))));
+    Ok(result)
+}
+
+pub fn decode_with_first_and_follow_le(
+    length: u8,
+    first_byte: u8,
+    follow_le_max_8_bytes: u64,
+) -> Result<u64, Error> {
+    let follow_len = length - 1;
+    //
+    let result = if follow_len == 0 {
+        // 1-byte special case
+        first_byte as u64
+    } else if follow_len < 7 {
+        let val = u64::from_le(follow_le_max_8_bytes);
+        let lsb = first_byte << length;
+        ((val << 8) | lsb as u64) >> length
+    } else if follow_len == 7 || follow_len == 8 {
+        // 8-byte and 9-byte special case
+        u64::from_le(follow_le_max_8_bytes)
     } else {
         #[allow(unsafe_code)]
         unsafe {
@@ -346,9 +388,8 @@ impl Display for Error {
 impl std::error::Error for Error {}
 
 #[cfg(test)]
-mod test_u64 {
-    use super::{decode, encode, encoded_len};
-    use super::{MAX_LEN1, MAX_LEN2, MAX_LEN3, MAX_LEN4, MAX_LEN5, MAX_LEN6, MAX_LEN7, MAX_LEN8};
+mod test_u64_0 {
+    use super::{decode, decode2, decode3, encode};
     //
     #[test]
     fn encode_bit_pattern_examples() {
@@ -378,6 +419,54 @@ mod test_u64 {
         assert_eq!(decode(slice).unwrap(), 0x0f0f_f0f0_0f0f_f0f0);
     }
     #[test]
+    fn decode2_bit_pattern_examples() {
+        let slice = [0x8F, 0x3c].as_ref();
+        assert_eq!(decode2(slice[0], &slice[1..]).unwrap(), 0x0f0f);
+
+        let slice = [0xE0, 0x0f, 0xff, 0xf0].as_ref();
+        assert_eq!(decode2(slice[0], &slice[1..]).unwrap(), 0x0f0f_f0f0);
+
+        let slice = [0xFD, 0x87, 0x07, 0x78, 0xf8, 0x87, 0x07].as_ref();
+        assert_eq!(decode2(slice[0], &slice[1..]).unwrap(), 0x0f0f_f0f0_0f0f);
+
+        let slice = [0xFF, 0xf0, 0xf0, 0x0f, 0x0f, 0xf0, 0xf0, 0x0f, 0x0f].as_ref();
+        assert_eq!(
+            decode2(slice[0], &slice[1..]).unwrap(),
+            0x0f0f_f0f0_0f0f_f0f0
+        );
+    }
+    #[test]
+    fn decode3_bit_pattern_examples() {
+        let slice = [0x8F, 0x3c].as_ref();
+        let mut buf = [0u8; 8];
+        buf[..1].copy_from_slice(&slice[1..]);
+        assert_eq!(decode3(slice[0], u64::from_le_bytes(buf)).unwrap(), 0x0f0f);
+
+        let slice = [0xE0, 0x0f, 0xff, 0xf0].as_ref();
+        let mut buf = [0u8; 8];
+        buf[..3].copy_from_slice(&slice[1..]);
+        assert_eq!(
+            decode3(slice[0], u64::from_le_bytes(buf)).unwrap(),
+            0x0f0f_f0f0
+        );
+
+        let slice = [0xFD, 0x87, 0x07, 0x78, 0xf8, 0x87, 0x07].as_ref();
+        let mut buf = [0u8; 8];
+        buf[..6].copy_from_slice(&slice[1..]);
+        assert_eq!(
+            decode3(slice[0], u64::from_le_bytes(buf)).unwrap(),
+            0x0f0f_f0f0_0f0f
+        );
+
+        let slice = [0xFF, 0xf0, 0xf0, 0x0f, 0x0f, 0xf0, 0xf0, 0x0f, 0x0f].as_ref();
+        let mut buf = [0u8; 8];
+        buf[..8].copy_from_slice(&slice[1..]);
+        assert_eq!(
+            decode3(slice[0], u64::from_le_bytes(buf)).unwrap(),
+            0x0f0f_f0f0_0f0f_f0f0
+        );
+    }
+    #[test]
     fn encode_decode() {
         let val = 1234;
         assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
@@ -385,258 +474,632 @@ mod test_u64 {
         assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
     }
     #[test]
+    fn encode_decode2() {
+        let val = 1234;
+        let enc = encode(val);
+        let slice = enc.as_ref();
+        assert_eq!(decode2(slice[0], &slice[1..]).unwrap(), val);
+        let val = 123456789;
+        let enc = encode(val);
+        let slice = enc.as_ref();
+        assert_eq!(decode2(slice[0], &slice[1..]).unwrap(), val);
+    }
+    #[test]
+    fn encode_decode3() {
+        let val = 1234;
+        let enc = encode(val);
+        let slice = enc.as_ref();
+        let mut buf = [0u8; 8];
+        buf[..1].copy_from_slice(&slice[1..]);
+        assert_eq!(decode3(slice[0], u64::from_le_bytes(buf)).unwrap(), val);
+        let val = 123456789;
+        let enc = encode(val);
+        let slice = enc.as_ref();
+        let mut buf = [0u8; 8];
+        buf[..3].copy_from_slice(&slice[1..]);
+        assert_eq!(decode3(slice[0], u64::from_le_bytes(buf)).unwrap(), val);
+    }
+}
+
+#[cfg(test)]
+mod test_u64_1 {
+    use super::{decode, decode2, decode3, encode, encoded_len};
+    use super::{MAX_LEN1, MAX_LEN2, MAX_LEN3, MAX_LEN4, MAX_LEN5, MAX_LEN6, MAX_LEN7, MAX_LEN8};
+    #[test]
     fn enc_dec_max_u64() {
         let val = core::u64::MAX;
         assert_eq!(encoded_len(val), 9);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
         assert_eq!(
-            encode(val).as_ref(),
+            encoded_slice,
             &[0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]
         );
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..8].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
     }
     #[test]
     fn enc_dec_max_u32() {
         let val = core::u32::MAX.into();
         assert_eq!(encoded_len(val), 5);
-        assert_eq!(encode(val).as_ref(), &[0xf7, 0xff, 0xff, 0xff, 0x1f]);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0xf7, 0xff, 0xff, 0xff, 0x1f]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..4].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
     }
     #[test]
     fn enc_dec_max_u16() {
         let val = core::u16::MAX.into();
         assert_eq!(encoded_len(val), 3);
-        assert_eq!(encode(val).as_ref(), &[0xdf, 0xff, 0x07]);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0xdf, 0xff, 0x07]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..2].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
     }
     #[test]
     fn enc_dec_max_u8() {
         let val = core::u8::MAX.into();
         assert_eq!(encoded_len(val), 2);
-        assert_eq!(encode(val).as_ref(), &[0xbf, 0x03]);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0xbf, 0x03]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..1].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
     }
     #[test]
     fn enc_dec_zero() {
         let val = 0u64;
         assert_eq!(encoded_len(val), 1);
-        assert_eq!(encode(val).as_ref(), &[0x00]);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0x00]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..0].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
     }
     #[test]
     fn enc_dec_max_len1() {
         let val = MAX_LEN1 as u64;
         assert_eq!(encoded_len(val), 1);
-        assert_eq!(encode(val).as_ref(), &[0x7F]);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0x7F]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..0].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
+        //
         let val = val + 1;
         assert_eq!(encoded_len(val), 2);
-        assert_eq!(encode(val).as_ref(), &[0x80, 0x02]);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0x80, 0x02]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..1].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
     }
     #[test]
     fn enc_dec_max_len2() {
         let val = MAX_LEN2 as u64;
         assert_eq!(encoded_len(val), 2);
-        assert_eq!(encode(val).as_ref(), &[0xBF, 0xFF]);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0xBF, 0xFF]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..1].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
+        //
         let val = val + 1;
         assert_eq!(encoded_len(val), 3);
-        assert_eq!(encode(val).as_ref(), &[0xC0, 0x00, 0x02]);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0xC0, 0x00, 0x02]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..2].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
     }
     #[test]
     fn enc_dec_max_len3() {
         let val = MAX_LEN3 as u64;
         assert_eq!(encoded_len(val), 3);
-        assert_eq!(encode(val).as_ref(), &[0xDF, 0xFF, 0xFF]);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0xDF, 0xFF, 0xFF]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..2].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
+        //
         let val = val + 1;
         assert_eq!(encoded_len(val), 4);
-        assert_eq!(encode(val).as_ref(), &[0xE0, 0x00, 0x00, 0x02]);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0xE0, 0x00, 0x00, 0x02]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..3].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
     }
     #[test]
     fn enc_dec_max_len4() {
         let val = MAX_LEN4 as u64;
         assert_eq!(encoded_len(val), 4);
-        assert_eq!(encode(val).as_ref(), &[0xEF, 0xFF, 0xFF, 0xFF]);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0xEF, 0xFF, 0xFF, 0xFF]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..3].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
+        //
         let val = val + 1;
         assert_eq!(encoded_len(val), 5);
-        assert_eq!(encode(val).as_ref(), &[0xF0, 0x00, 0x00, 0x00, 0x02]);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0xF0, 0x00, 0x00, 0x00, 0x02]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..4].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
     }
     #[test]
     fn enc_dec_max_len5() {
         let val = MAX_LEN5 as u64;
         assert_eq!(encoded_len(val), 5);
-        assert_eq!(encode(val).as_ref(), &[0xF7, 0xFF, 0xFF, 0xFF, 0xFF]);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0xF7, 0xFF, 0xFF, 0xFF, 0xFF]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..4].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
+        //
         let val = val + 1;
         assert_eq!(encoded_len(val), 6);
-        assert_eq!(encode(val).as_ref(), &[0xF8, 0x00, 0x00, 0x00, 0x00, 0x02]);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0xF8, 0x00, 0x00, 0x00, 0x00, 0x02]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..5].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
     }
     #[test]
     fn enc_dec_max_len6() {
         let val = MAX_LEN6 as u64;
         assert_eq!(encoded_len(val), 6);
-        assert_eq!(encode(val).as_ref(), &[0xFB, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0xFB, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..5].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
+        //
         let val = val + 1;
         assert_eq!(encoded_len(val), 7);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..6].copy_from_slice(&encoded_slice[1..]);
         assert_eq!(
-            encode(val).as_ref(),
-            &[0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
         );
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
     }
     #[test]
     fn enc_dec_max_len7() {
         let val = MAX_LEN7 as u64;
         assert_eq!(encoded_len(val), 7);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0xFD, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..6].copy_from_slice(&encoded_slice[1..]);
         assert_eq!(
-            encode(val).as_ref(),
-            &[0xFD, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
         );
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        //
         let val = val + 1;
         assert_eq!(encoded_len(val), 8);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
         assert_eq!(
-            encode(val).as_ref(),
+            encoded_slice,
             &[0xFE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02]
         );
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..7].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
     }
     #[test]
     fn enc_dec_max_len8() {
         let val = MAX_LEN8 as u64;
         assert_eq!(encoded_len(val), 8);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
         assert_eq!(
-            encode(val).as_ref(),
+            encoded_slice,
             &[0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
         );
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..7].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
+        //
         let val = val + 1;
         assert_eq!(encoded_len(val), 9);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
         assert_eq!(
-            encode(val).as_ref(),
+            encoded_slice,
             &[0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01]
         );
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..8].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
     }
     #[test]
     fn enc_dec_len_6() {
         let val = 0x0300_0000_0000;
         assert_eq!(encoded_len(val), 6);
-        assert_eq!(encode(val).as_ref(), &[0xf8, 0x00, 0x00, 0x00, 0x00, 0xc0]);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0xf8, 0x00, 0x00, 0x00, 0x00, 0xc0]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..5].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
     }
     #[test]
     fn enc_dec_len_7() {
         let val = 0x1_0000_0000_0000;
         assert_eq!(encoded_len(val), 7);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(encoded_slice, &[0xfc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80]);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..6].copy_from_slice(&encoded_slice[1..]);
         assert_eq!(
-            encode(val).as_ref(),
-            &[0xfc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80]
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
         );
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
     }
     #[test]
     fn enc_dec_len_8() {
         let val = 0x00f0_0000_0000_0000;
         assert_eq!(encoded_len(val), 8);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
         assert_eq!(
-            encode(val).as_ref(),
+            encoded_slice,
             &[0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0]
         );
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..7].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
     }
     #[test]
     fn enc_dec_len_9() {
         let val = 0x0100_0000_0000_0000;
         assert_eq!(encoded_len(val), 9);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
         assert_eq!(
-            encode(val).as_ref(),
+            encoded_slice,
             &[0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01]
         );
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..8].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
     }
+}
+
+#[cfg(test)]
+mod test_u64_2 {
+    use super::{decode, decode2, decode3, encode, encoded_len};
     #[test]
     fn enc_dec_all() {
         let mut val: u64 = 1;
         for _i in 0..64 {
             val = (val << 1) | 0x01;
-            assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+            let encoded = encode(val);
+            let encoded_slice = encoded.as_ref();
+            assert_eq!(decode(encoded_slice).unwrap(), val);
+            assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+            let mut buf = [0u8; 8];
+            buf[..encoded_slice.len() - 1].copy_from_slice(&encoded_slice[1..]);
+            assert_eq!(
+                decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+                val
+            );
         }
     }
     #[test]
     fn enc_dec_all_1byte() {
         for val in 0..128 {
             assert_eq!(encoded_len(val), 1);
-            assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+            let encoded = encode(val);
+            let encoded_slice = encoded.as_ref();
+            assert_eq!(decode(encoded_slice).unwrap(), val);
+            assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+            let mut buf = [0u8; 8];
+            buf[..encoded_slice.len() - 1].copy_from_slice(&encoded_slice[1..]);
+            assert_eq!(
+                decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+                val
+            );
         }
     }
     #[test]
     fn enc_dec_all_2byte() {
         for val in 128..16384 {
             assert_eq!(encoded_len(val), 2);
-            assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+            let encoded = encode(val);
+            let encoded_slice = encoded.as_ref();
+            assert_eq!(decode(encoded_slice).unwrap(), val);
+            assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+            let mut buf = [0u8; 8];
+            buf[..encoded_slice.len() - 1].copy_from_slice(&encoded_slice[1..]);
+            assert_eq!(
+                decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+                val
+            );
         }
     }
     #[test]
     fn enc_dec_all_3byte() {
         for val in 16384..2097152 {
             assert_eq!(encoded_len(val), 3);
-            assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+            let encoded = encode(val);
+            let encoded_slice = encoded.as_ref();
+            assert_eq!(decode(encoded_slice).unwrap(), val);
+            assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+            let mut buf = [0u8; 8];
+            buf[..encoded_slice.len() - 1].copy_from_slice(&encoded_slice[1..]);
+            assert_eq!(
+                decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+                val
+            );
         }
     }
     #[test]
     fn enc_dec_sp1() {
         let val = 0x06_6C80;
         assert_eq!(encoded_len(val), 3);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..encoded_slice.len() - 1].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
     }
     #[test]
     fn enc_dec_sp2() {
         let val = 136;
         assert_eq!(encoded_len(val), 2);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..encoded_slice.len() - 1].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
         //
         let val = 288;
         assert_eq!(encoded_len(val), 2);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..encoded_slice.len() - 1].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
         //
         let val = 569;
         assert_eq!(encoded_len(val), 2);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..encoded_slice.len() - 1].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
         //
         let val = 1144;
         assert_eq!(encoded_len(val), 2);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..encoded_slice.len() - 1].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
         //
         let val = 2296;
         assert_eq!(encoded_len(val), 2);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..encoded_slice.len() - 1].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
         //
         let val = 4601;
         assert_eq!(encoded_len(val), 2);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..encoded_slice.len() - 1].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
         //
         let val = 9209;
         assert_eq!(encoded_len(val), 2);
-        assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+        let encoded = encode(val);
+        let encoded_slice = encoded.as_ref();
+        assert_eq!(decode(encoded_slice).unwrap(), val);
+        assert_eq!(decode2(encoded_slice[0], &encoded_slice[1..]).unwrap(), val);
+        let mut buf = [0u8; 8];
+        buf[..encoded_slice.len() - 1].copy_from_slice(&encoded_slice[1..]);
+        assert_eq!(
+            decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
+            val
+        );
     }
     #[test]
     fn decode_err_truncated() {
         let slice = [0xF0].as_ref();
         assert!(decode(slice).is_err());
+        assert!(decode2(slice[0], &slice[1..]).is_err());
         let slice = [0xF8, 0x0f, 0xff].as_ref();
         assert!(decode(slice).is_err());
+        assert!(decode2(slice[0], &slice[1..]).is_err());
+        //assert!(decode3(slice[0], 0).is_err());
     }
     #[test]
     fn decode_err_leading_ones() {
         let slice = [0xF8, 0x00, 0x00, 0x00].as_ref();
         assert!(decode(slice).is_err());
+        assert!(decode2(slice[0], &slice[1..]).is_err());
+        //assert!(decode3(slice[0], 0).is_err());
     }
 }
