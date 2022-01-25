@@ -145,11 +145,17 @@ impl TryFrom<&[u8]> for Vu64 {
 #[inline]
 pub fn encoded_len(value: u64) -> u8 {
     let ldz = value.leading_zeros();
-    ENCODED_LEN_TBL[ldz as usize]
+    //
+    #[cfg(feature = "vu64_debug")]
+    let val = ENCODED_LEN_TBL[ldz as usize];
+    #[cfg(not(feature = "vu64_debug"))]
+    let val = unsafe { *ENCODED_LEN_TBL.get_unchecked(ldz as usize) };
+    //
+    val
 }
 
 #[rustfmt::skip]
-static ENCODED_LEN_TBL: &[u8; 65] = &[
+static ENCODED_LEN_TBL: [u8; 65] = [
     9,
     9, 9, 9, 9, 9, 9, 9,
     8, 8, 8, 8, 8, 8, 8,
@@ -260,16 +266,35 @@ pub fn decode_with_length(length: u8, bytes: &[u8]) -> Result<u64, Error> {
     //
     let result = if follow_len == 0 {
         // 1-byte special case
-        bytes[0] as u64
+        #[cfg(feature = "vu64_debug")]
+        let val = bytes[0] as u64;
+        #[cfg(not(feature = "vu64_debug"))]
+        let val = unsafe { *bytes.get_unchecked(0) as u64 };
+        //
+        val
     } else if follow_len < 7 {
-        let mut val = 0u64;
-        let mut i = length as usize - 1;
-        while i > 0 {
-            val = val << 8 | bytes[i] as u64;
-            i -= 1;
+        #[cfg(feature = "vu64_debug")]
+        {
+            let mut val = 0u64;
+            let mut i = length as usize - 1;
+            while i > 0 {
+                val = val << 8 | bytes[i] as u64;
+                i -= 1;
+            }
+            let lsb = bytes[0] << length;
+            ((val << 8) | lsb as u64) >> length
         }
-        let lsb = bytes[0] << length;
-        ((val << 8) | lsb as u64) >> length
+        #[cfg(not(feature = "vu64_debug"))]
+        {
+            let mut val = 0u64;
+            let mut i = length as usize - 1;
+            while i > 0 {
+                val = val << 8 | unsafe { *bytes.get_unchecked(i) as u64 };
+                i -= 1;
+            }
+            let lsb = unsafe { *bytes.get_unchecked(0) } << length;
+            ((val << 8) | lsb as u64) >> length
+        }
     } else if follow_len == 7 {
         // 8-byte special case
         let mut val = 0u64;
@@ -338,6 +363,7 @@ pub fn decode_with_first_and_follow(
     Ok(result)
 }
 
+#[inline]
 pub fn decode_with_first_and_follow_le(
     length: u8,
     first_byte: u8,

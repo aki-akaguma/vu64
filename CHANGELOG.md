@@ -2,6 +2,11 @@ TBD
 ===
 Unreleased changes. Release notes have not yet been written.
 
+0.1.4 (2021-01-25)
+=====
+
+* adds `vu64_debug` to feature.
+
 0.1.3 (2021-12-13)
 =====
 
