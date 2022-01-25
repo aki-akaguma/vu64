@@ -1,6 +1,6 @@
 [package]
 name = "vu64"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["aki <aki.akaguma@hotmail.com>"]
 edition = "2018"
 description = "variable length encode/decode for a 64-bits integer"
@@ -14,5 +14,6 @@ repository = "https://github.com/aki-akaguma/vu64"
 default = ["io"]
 
 io = []
+vu64_debug = []
 
 [dependencies]
