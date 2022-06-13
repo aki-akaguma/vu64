@@ -3,6 +3,11 @@
 The variable length integer encoding of u64.
 This is a simple and fast encoder/decoder.
 
+## Features
+
+- integer value length compaction
+- minimum support rustc 1.56.1 (59eed8a2a 2021-11-01)
+
 ### format pattern
 
 | Prefix     | Precision | Total Bytes |
