@@ -2,7 +2,7 @@
 name = "vu64"
 version = "0.1.4"
 authors = ["aki <aki.akaguma@hotmail.com>"]
-edition = "2018"
+edition = "2021"
 description = "variable length encode/decode for a 64-bits integer"
 keywords = ["serialization", "varint", "integer"]
 categories = []
