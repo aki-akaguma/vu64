@@ -9,7 +9,7 @@ pub trait ReadVu64: std::io::Read {
     #[inline]
     fn read_one_byte(&mut self) -> Result<u8> {
         let mut buf = [0u8; 1];
-        let _ = self.read_exact(&mut buf)?;
+        self.read_exact(&mut buf)?;
         Ok(buf[0])
     }
     /// you can write over this by a fast routine.
