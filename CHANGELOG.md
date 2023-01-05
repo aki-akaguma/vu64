@@ -1,40 +1,50 @@
-TBD: vu64
-===
-Unreleased changes. Release notes have not yet been written.
+# Changelog: vu64
 
-* fix clippy: this let-binding has unit value
+All notable changes to this project will be documented in this file.
 
-0.1.5 (2022-06-13)
-=====
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-* changes to edition 2021
+## Unreleased
 
-0.1.4 (2021-01-25)
-=====
 
-* adds `vu64_debug` to feature.
+## 0.1.6 (2023-01-06)
+### Changed
+* reformat `README.md`
 
-0.1.3 (2021-12-13)
-=====
+### Fixed
+* clippy: this let-binding has unit value
 
-* adds `decode3()`.
+## 0.1.5 (2022-06-13)
+### Changed
+* change to edition 2021
+
+## 0.1.4 (2021-01-25)
+### Added
+* add `vu64_debug` to feature.
+
+## 0.1.3 (2021-12-13)
+### Added
+* add `decode3()`.
+* add `decode2()` and `decode_with_first_and_follow()`.
+
+### Changed
 * rewrite `read_and_decode_vu64` with `decode_with_first_and_follow()`.
-* adds `decode2()` and `decode_with_first_and_follow()`.
 
-0.1.2 (2021-11-26)
-=====
+## 0.1.2 (2021-11-26)
+### Changed
+* add more test code.
 
-* adds more test code.
+## 0.1.1 (2021-11-18)
+### Added
+* add a signed 64-bits value encoding using zigzag encoding.
 
-0.1.1 (2021-11-18)
-=====
-
-* adds a signed 64-bits value encoding using zigzag encoding.
+### Changed
 * rewrites decode_with_length() for more speed.
-* fix redundant: decode().
 * rewrites encoded_len() with a const table.
 
-0.1.0 (2021-11-10)
-=====
+### Fixed
+* redundant: decode().
 
-first commit
+## 0.1.0 (2021-11-10)
+* first commit
