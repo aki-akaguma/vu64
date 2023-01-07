@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] *
 ### Added
 * version difference link into `CHANGELOG.md`
+* rust-version = "1.56.0" into Cargo.toml
+
+### Changed
+* rename target `test-no_std` to `test-no-default-features` on Makefile
 
 
 ## [0.1.6] (2023-01-06)
