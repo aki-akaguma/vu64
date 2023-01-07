@@ -9,7 +9,7 @@ README.md: README.tpl src/lib.rs
 test:
 	cargo test
 
-test-no_std:
+test-no-default-features:
 	cargo test --no-default-features
 
 clean:
