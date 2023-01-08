@@ -1,5 +1,10 @@
 # vu64
 
+[![crate][crate-image]][crate-link]
+[![Docs][docs-image]][docs-link]
+![Rust Version][rustc-image]
+![Apache2/MIT licensed][license-image]
+
 The variable length integer encoding of u64.
 This is a simple and fast encoder/decoder.
 
@@ -74,3 +79,12 @@ This project is licensed under either of
    https://opensource.org/licenses/MIT)
 
 at your option.
+
+[//]: # (badges)
+
+[crate-image]: https://img.shields.io/crates/v/vu64.svg
+[crate-link]: https://crates.io/crates/vu64
+[docs-image]: https://docs.rs/vu64/badge.svg
+[docs-link]: https://docs.rs/vu64/
+[rustc-image]: https://img.shields.io/badge/rustc-1.56+-blue.svg
+[license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
