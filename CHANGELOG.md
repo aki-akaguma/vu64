@@ -8,9 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] *
 ### Added
 * `.github/workflows/test.yml`
+* test status badges into `README.tpl`
 
 ### Fixed
 * Makefile: rustc version `1.66.0` to `1.66.1`
+* clippy: `unnecessary_cast`
 
 
 ## [0.1.7] (2023-01-10)

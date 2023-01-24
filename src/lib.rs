@@ -621,7 +621,7 @@ mod test_u64_1 {
     }
     #[test]
     fn enc_dec_max_len1() {
-        let val = MAX_LEN1 as u64;
+        let val = MAX_LEN1;
         assert_eq!(encoded_len(val), 1);
         let encoded = encode(val);
         let encoded_slice = encoded.as_ref();
@@ -651,7 +651,7 @@ mod test_u64_1 {
     }
     #[test]
     fn enc_dec_max_len2() {
-        let val = MAX_LEN2 as u64;
+        let val = MAX_LEN2;
         assert_eq!(encoded_len(val), 2);
         let encoded = encode(val);
         let encoded_slice = encoded.as_ref();
@@ -681,7 +681,7 @@ mod test_u64_1 {
     }
     #[test]
     fn enc_dec_max_len3() {
-        let val = MAX_LEN3 as u64;
+        let val = MAX_LEN3;
         assert_eq!(encoded_len(val), 3);
         let encoded = encode(val);
         let encoded_slice = encoded.as_ref();
@@ -711,7 +711,7 @@ mod test_u64_1 {
     }
     #[test]
     fn enc_dec_max_len4() {
-        let val = MAX_LEN4 as u64;
+        let val = MAX_LEN4;
         assert_eq!(encoded_len(val), 4);
         let encoded = encode(val);
         let encoded_slice = encoded.as_ref();
@@ -741,7 +741,7 @@ mod test_u64_1 {
     }
     #[test]
     fn enc_dec_max_len5() {
-        let val = MAX_LEN5 as u64;
+        let val = MAX_LEN5;
         assert_eq!(encoded_len(val), 5);
         let encoded = encode(val);
         let encoded_slice = encoded.as_ref();
@@ -771,7 +771,7 @@ mod test_u64_1 {
     }
     #[test]
     fn enc_dec_max_len6() {
-        let val = MAX_LEN6 as u64;
+        let val = MAX_LEN6;
         assert_eq!(encoded_len(val), 6);
         let encoded = encode(val);
         let encoded_slice = encoded.as_ref();
@@ -801,7 +801,7 @@ mod test_u64_1 {
     }
     #[test]
     fn enc_dec_max_len7() {
-        let val = MAX_LEN7 as u64;
+        let val = MAX_LEN7;
         assert_eq!(encoded_len(val), 7);
         let encoded = encode(val);
         let encoded_slice = encoded.as_ref();
@@ -834,7 +834,7 @@ mod test_u64_1 {
     }
     #[test]
     fn enc_dec_max_len8() {
-        let val = MAX_LEN8 as u64;
+        let val = MAX_LEN8;
         assert_eq!(encoded_len(val), 8);
         let encoded = encode(val);
         let encoded_slice = encoded.as_ref();

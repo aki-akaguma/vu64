@@ -4,6 +4,7 @@
 [![Docs][docs-image]][docs-link]
 ![Rust Version][rustc-image]
 ![Apache2/MIT licensed][license-image]
+[![Test][test-image]][test-link]
 
 The variable length integer encoding of u64.
 This is a simple and fast encoder/decoder.
@@ -88,3 +89,5 @@ at your option.
 [docs-link]: https://docs.rs/vu64/
 [rustc-image]: https://img.shields.io/badge/rustc-1.56+-blue.svg
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
+[test-image]: https://github.com/aki-akaguma/vu64/actions/workflows/test.yml/badge.svg
+[test-link]: https://github.com/aki-akaguma/vu64/actions/workflows/test.yml
