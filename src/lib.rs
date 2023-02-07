@@ -398,7 +398,7 @@ pub fn decode_with_first_and_follow_le(
 }
 
 /// Error type
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Error {
     /// Value contains unnecessary leading ones
     LeadingOnes,
@@ -1132,5 +1132,60 @@ mod test_u64_2 {
         assert!(decode(slice).is_err());
         assert!(decode2(slice[0], &slice[1..]).is_err());
         //assert!(decode3(slice[0], 0).is_err());
+    }
+}
+
+#[cfg(test)]
+mod test_u64_3 {
+    use super::{check_result_with_length, decode, encode, Error, Vu64};
+    #[test]
+    fn vu64_debug_format_1() {
+        let vu64 = encode(123456789);
+        assert_eq!(format!("{:#?}", vu64), "V64(123456789)");
+    }
+    #[test]
+    fn try_from_1() {
+        let v = vec![0xE0u8, 0x0fu8, 0xffu8, 0xf0u8];
+        let r = Vu64::try_from(v.as_slice());
+        assert!(r.is_ok());
+        assert_eq!(format!("{:#?}", r.unwrap()), "V64(252702960)");
+    }
+    #[test]
+    fn try_into_1() {
+        let v = vec![0xE0u8, 0x0fu8, 0xffu8, 0xf0u8];
+        let r: Result<Vu64, Error> = v.as_slice().try_into();
+        assert!(r.is_ok());
+        assert_eq!(format!("{:#?}", r.unwrap()), "V64(252702960)");
+    }
+    #[test]
+    fn decode_empty_1() {
+        let v: Vec<u8> = Vec::new();
+        let r = decode(v.as_slice());
+        assert!(r.is_err());
+        assert_eq!(r, Err(Error::Truncated));
+    }
+    #[test]
+    fn check_result_with_length_1() {
+        let r = check_result_with_length(2, 123456789);
+        assert!(r.is_ok());
+        let r = check_result_with_length(9, 123456789);
+        assert!(r.is_err());
+        assert_eq!(r, Err(Error::LeadingOnes));
+    }
+    #[test]
+    fn error_format_1() {
+        let v: Vec<u8> = Vec::new();
+        let r = decode(v.as_slice());
+        assert!(r.is_err());
+        assert_eq!(r, Err(Error::Truncated));
+        if let Err(err) = r {
+            assert_eq!(format!("{}", err), "truncated vu64 value");
+        }
+        let r = check_result_with_length(9, 123456789);
+        assert!(r.is_err());
+        assert_eq!(r, Err(Error::LeadingOnes));
+        if let Err(err) = r {
+            assert_eq!(format!("{}", err), "leading ones in vu64 value");
+        }
     }
 }
