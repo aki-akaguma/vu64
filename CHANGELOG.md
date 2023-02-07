@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] *
 ### Added
-* more tests: `test_u64_3::xxx()`
+* more tests: `test_u64_3::xxx()`, `test_io::xxx()`
 
 
 ## [0.1.8] (2023-01-28)

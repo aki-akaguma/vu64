@@ -17,14 +17,23 @@ README.md: README.tpl src/lib.rs
 	cargo readme > $@
 
 test:
-	cargo test
+	cargo test --offline
 
 test-no-default-features:
-	cargo test --no-default-features
+	cargo test --offline --no-default-features
 
 clean:
 	@cargo clean
 	@rm -f z.*
+
+clippy:
+	cargo clippy --offline --tests
+
+fmt:
+	cargo fmt
+
+tarpaulin:
+	cargo tarpaulin --offline --engine llvm --out html --output-dir ./target
 
 
 test-all-version: $(foreach ver,$(rustc_vers),$(foreach tb,$(target_base),target/stamp/stamp.test-rustc.$(ver).$(tb)))
