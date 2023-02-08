@@ -30,7 +30,6 @@ but 0x00 is represented by 0x00.
 
 ```rust
 use vu64::encode;
-
 assert_eq!(encode(0x0f0f).as_ref(), &[0x8F, 0x3c]);
 ```
 
@@ -38,7 +37,6 @@ assert_eq!(encode(0x0f0f).as_ref(), &[0x8F, 0x3c]);
 
 ```rust
 use vu64::decode;
-
 let slice = [0x8F, 0x3c].as_ref();
 assert_eq!(decode(slice).unwrap(), 0x0f0f);
 ```
@@ -47,9 +45,31 @@ assert_eq!(decode(slice).unwrap(), 0x0f0f);
 
 ```rust
 use vu64::{encode, decode};
-
 let val = 1234;
 assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+```
+
+## Read from buffer and decode 
+
+```
+use vu64::io::ReadVu64;
+let vec: Vec<u8> = vec![0xFF, 0xf0, 0xf0, 0x0f, 0x0f, 0xf0, 0xf0, 0x0f, 0x0f];
+let mut crsr = std::io::Cursor::new(vec);
+let r = crsr.read_and_decode_vu64();
+assert!(r.is_ok());
+assert_eq!(r.unwrap(), 0x0f0f_f0f0_0f0f_f0f0);
+```
+
+## Encode and write to buffer
+
+```
+use vu64::io::WriteVu64;
+let vec_0: Vec<u8> = vec![0xFF, 0xf0, 0xf0, 0x0f, 0x0f, 0xf0, 0xf0, 0x0f, 0x0f];
+let vec: Vec<u8> = Vec::new();
+let mut crsr = std::io::Cursor::new(vec);
+let r = crsr.encode_and_write_vu64(0x0f0f_f0f0_0f0f_f0f0);
+assert!(r.is_ok());
+assert_eq!(crsr.get_ref().as_slice(), vec_0.as_slice());
 ```
 
 */
@@ -215,11 +235,11 @@ pub fn encode(value: u64) -> Vu64 {
     Vu64 { bytes, length }
 }
 
-/// Decode a `v64`-encoded unsigned 64-bit integer.
+/// Decode `vu64`-encoded bytes to unsigned 64-bit integer.
 ///
-/// Accepts a mutable reference to a slice containing the `v64`.
+/// Accepts a mutable reference to a slice containing the `vu64`.
 /// Upon success, the reference is updated to begin at the byte immediately
-/// after the encoded `v64`.
+/// after the encoded `vu64`.
 #[inline]
 pub fn decode(bytes: &[u8]) -> Result<u64, Error> {
     if bytes.is_empty() {
@@ -230,11 +250,11 @@ pub fn decode(bytes: &[u8]) -> Result<u64, Error> {
     Ok(result)
 }
 
-/// Decode a `v64`-encoded unsigned 64-bit integer.
+/// Decode `vu64`-encoded bytes to unsigned 64-bit integer.
 ///
-/// Accepts a mutable reference to a slice containing the `v64`.
+/// Accepts a mutable reference to a slice containing the `vu64`.
 /// Upon success, the reference is updated to begin at the byte immediately
-/// after the encoded `v64`.
+/// after the encoded `vu64`.
 #[inline]
 pub fn decode2(first_byte: u8, follow_bytes: &[u8]) -> Result<u64, Error> {
     let length = decoded_len(first_byte);
@@ -242,11 +262,11 @@ pub fn decode2(first_byte: u8, follow_bytes: &[u8]) -> Result<u64, Error> {
     Ok(result)
 }
 
-/// Decode a `v64`-encoded unsigned 64-bit integer.
+/// Decode `vu64`-encoded bytes to unsigned 64-bit integer.
 ///
-/// Accepts a mutable reference to a slice containing the `v64`.
+/// Accepts a mutable reference to a slice containing the `vu64`.
 /// Upon success, the reference is updated to begin at the byte immediately
-/// after the encoded `v64`.
+/// after the encoded `vu64`.
 #[inline]
 pub fn decode3(first_byte: u8, follow_le_max_8_bytes: u64) -> Result<u64, Error> {
     let length = decoded_len(first_byte);

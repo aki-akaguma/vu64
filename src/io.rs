@@ -1,9 +1,37 @@
+/*!
+Supports of `std::io`.
+
+# Examples
+
+## `read_and_decode_vu64()` of `std::io::Cursor`
+
+```
+use vu64::io::ReadVu64;
+let vec: Vec<u8> = vec![0xFF, 0xf0, 0xf0, 0x0f, 0x0f, 0xf0, 0xf0, 0x0f, 0x0f];
+let mut crsr = std::io::Cursor::new(vec);
+let r = crsr.read_and_decode_vu64();
+assert!(r.is_ok());
+assert_eq!(r.unwrap(), 0x0f0f_f0f0_0f0f_f0f0);
+```
+
+## `encode_and_write_vu64()` of `std::io::Cursor`
+
+```
+use vu64::io::WriteVu64;
+let vec_0: Vec<u8> = vec![0xFF, 0xf0, 0xf0, 0x0f, 0x0f, 0xf0, 0xf0, 0x0f, 0x0f];
+let vec: Vec<u8> = Vec::new();
+let mut crsr = std::io::Cursor::new(vec);
+let r = crsr.encode_and_write_vu64(0x0f0f_f0f0_0f0f_f0f0);
+assert!(r.is_ok());
+assert_eq!(crsr.get_ref().as_slice(), vec_0.as_slice());
+```
+*/
 use super::signed::zigzag;
 use super::{decode_with_first_and_follow, decoded_len, encode, MAX_BYTES};
 use std::fs::File;
 use std::io::{Cursor, Read, Result, Write};
 
-/// io read interface of `vu64` and `vi64`
+/// io read trait of `vu64` and `vi64`
 pub trait ReadVu64: std::io::Read {
     /// you can write over this by a fast routine.
     #[inline]
@@ -42,7 +70,7 @@ pub trait ReadVu64: std::io::Read {
     }
 }
 
-/// io write interface of `vu64` and `vi64`
+/// io write trait of `vu64` and `vi64`
 pub trait WriteVu64: std::io::Write {
     /// encods `u64` to `vu64` bytes and writes it.
     #[inline]

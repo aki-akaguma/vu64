@@ -39,7 +39,6 @@ but 0x00 is represented by 0x00.
 
 ```rust
 use vu64::encode;
-
 assert_eq!(encode(0x0f0f).as_ref(), &[0x8F, 0x3c]);
 ```
 
@@ -47,7 +46,6 @@ assert_eq!(encode(0x0f0f).as_ref(), &[0x8F, 0x3c]);
 
 ```rust
 use vu64::decode;
-
 let slice = [0x8F, 0x3c].as_ref();
 assert_eq!(decode(slice).unwrap(), 0x0f0f);
 ```
@@ -56,9 +54,31 @@ assert_eq!(decode(slice).unwrap(), 0x0f0f);
 
 ```rust
 use vu64::{encode, decode};
-
 let val = 1234;
 assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
+```
+
+### Read from buffer and decode
+
+```rust
+use vu64::io::ReadVu64;
+let vec: Vec<u8> = vec![0xFF, 0xf0, 0xf0, 0x0f, 0x0f, 0xf0, 0xf0, 0x0f, 0x0f];
+let mut crsr = std::io::Cursor::new(vec);
+let r = crsr.read_and_decode_vu64();
+assert!(r.is_ok());
+assert_eq!(r.unwrap(), 0x0f0f_f0f0_0f0f_f0f0);
+```
+
+### Encode and write to buffer
+
+```rust
+use vu64::io::WriteVu64;
+let vec_0: Vec<u8> = vec![0xFF, 0xf0, 0xf0, 0x0f, 0x0f, 0xf0, 0xf0, 0x0f, 0x0f];
+let vec: Vec<u8> = Vec::new();
+let mut crsr = std::io::Cursor::new(vec);
+let r = crsr.encode_and_write_vu64(0x0f0f_f0f0_0f0f_f0f0);
+assert!(r.is_ok());
+assert_eq!(crsr.get_ref().as_slice(), vec_0.as_slice());
 ```
 
 
