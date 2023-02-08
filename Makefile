@@ -32,6 +32,9 @@ clippy:
 fmt:
 	cargo fmt
 
+doc:
+	cargo doc
+
 tarpaulin:
 	cargo tarpaulin --offline --engine llvm --out html --output-dir ./target
 

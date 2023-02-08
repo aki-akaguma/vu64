@@ -1,43 +1,42 @@
 /*!
-Support for encoding signed integers as `vu64`.
+Supports of encoding signed integers as `Vu64`.
 */
 use crate::{Error, Vu64};
 
-/// Encode a signed integer as a zigzag-encoded `vint64`.
+/// Encode a signed integer as a zigzag-encoded `Vu64`.
 #[inline]
 pub fn encode(value: i64) -> Vu64 {
     value.into()
 }
 
-/// Decode a zigzag-encoded `vint64` as a signed integer.
+/// Decode a zigzag-encoded bytes as a signed integer.
 #[inline]
 pub fn decode(bytes: &[u8]) -> Result<i64, Error> {
     super::decode(bytes).map(zigzag::decode)
 }
 
-/// Get the length of a zigzag encoded `vint64` for the given value in bytes.
+/// Get the length in bytes of a zigzag encoded `Vu64` from the given value.
 #[inline]
 pub fn encoded_len(value: i64) -> u8 {
     super::encoded_len(zigzag::encode(value))
 }
 
-/// Zigzag encoding for signed integers.
+/// The zigzag encoding for signed integers.
 ///
 /// This module contains the raw zigzag encoding algorithm.
+/// These are used in the function of the parent [`vu64::signed`](../index.html) module,
+/// and encode the "signed integer" as `u64`.
 ///
-/// For encoding signed integers as `vu64`, use the functions located in
-/// the parent [`vu64::signed`](../index.html) module.
-///
-/// Reference: [](https://developers.google.com/protocol-buffers/docs/encoding#types)
+/// Reference: [the __ZigZag__ encoding](https://protobuf.dev/programming-guides/encoding/#signed-ints)
 ///
 pub mod zigzag {
-    /// Encode a signed 64-bit integer in zigzag encoding
+    /// Encode a signed 64-bit integer to a zigzag encoded `u64`
     #[inline]
     pub fn encode(value: i64) -> u64 {
         ((value << 1) ^ (value >> 63)) as u64
     }
 
-    /// Decode a signed 64-bit integer from zigzag encoding
+    /// Decode a zigzag encoded `u64` to a signed 64-bit integer
     #[inline]
     pub fn decode(encoded: u64) -> i64 {
         (encoded >> 1) as i64 ^ -((encoded & 1) as i64)
@@ -47,7 +46,6 @@ pub mod zigzag {
 #[cfg(test)]
 mod test_i64 {
     use super::super::signed::{decode, encode, encoded_len};
-    //use super::{MAX_LEN1, MAX_LEN2, MAX_LEN3, MAX_LEN4, MAX_LEN5, MAX_LEN6, MAX_LEN7, MAX_LEN8};
     #[test]
     fn encode_bit_pattern_examples() {
         assert_eq!(encode(0x0f0f).as_ref(), &[0x9E, 0x78]);
