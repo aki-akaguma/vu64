@@ -59,7 +59,7 @@ pub trait ReadVu64: std::io::Read {
             Ok(i) => Ok(i),
             Err(err) => Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("{}", err),
+                format!("{err}"),
             )),
         }
     }
@@ -118,9 +118,9 @@ mod test_io {
         assert!(r.is_err());
         let err = r.unwrap_err();
         assert_eq!(err.type_id(), TypeId::of::<std::io::Error>());
-        assert_eq!(format!("{}", err), "failed to fill whole buffer");
+        assert_eq!(format!("{err}"), "failed to fill whole buffer");
         assert_eq!(
-            format!("{:#?}", err),
+            format!("{err:#?}"),
             concat!(
                 "Error {\n",
                 "    kind: UnexpectedEof,\n",

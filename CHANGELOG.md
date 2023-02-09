@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `COPYING`
 
 ### Fixed
+* clippy: `uninlined_format_args`
+* rust-version: "1.56.0" to "1.58.0"
 * `LICENSE-APACHE`, `LICENSE-MIT`
 * bug: redundant encode
 
