@@ -18,3 +18,6 @@ io = []
 vu64_debug = []
 
 [dependencies]
+
+[workspace]
+members = [ "xtask" ]

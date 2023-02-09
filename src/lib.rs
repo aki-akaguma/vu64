@@ -49,7 +49,7 @@ let val = 1234;
 assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
 ```
 
-## Read from buffer and decode 
+## Read from buffer and decode
 
 ```
 use vu64::io::ReadVu64;
@@ -338,9 +338,12 @@ pub fn decode_with_length(length: u8, bytes: &[u8]) -> Result<u64, Error> {
             core::hint::unreachable_unchecked()
         }
     };
-    //
-    debug_assert!(length == 1 || result >= (1 << (7 * (length - 1))));
-    Ok(result)
+    // check of the redundant encoding
+    if length == 1 || result >= (1 << (7 * (length - 1))) {
+        Ok(result)
+    } else {
+        Err(Error::RedundantEncode)
+    }
 }
 
 pub fn decode_with_first_and_follow(
@@ -383,9 +386,12 @@ pub fn decode_with_first_and_follow(
             core::hint::unreachable_unchecked()
         }
     };
-    //
-    debug_assert!(length == 1 || result >= (1 << (7 * (length - 1))));
-    Ok(result)
+    // check of the redundant encoding
+    if length == 1 || result >= (1 << (7 * (length - 1))) {
+        Ok(result)
+    } else {
+        Err(Error::RedundantEncode)
+    }
 }
 
 #[inline]
@@ -412,9 +418,12 @@ pub fn decode_with_first_and_follow_le(
             core::hint::unreachable_unchecked()
         }
     };
-    //
-    debug_assert!(length == 1 || result >= (1 << (7 * (length - 1))));
-    Ok(result)
+    // check of the redundant encoding
+    if length == 1 || result >= (1 << (7 * (length - 1))) {
+        Ok(result)
+    } else {
+        Err(Error::RedundantEncode)
+    }
 }
 
 /// Error type
@@ -425,6 +434,9 @@ pub enum Error {
 
     /// Value is truncated / malformed
     Truncated,
+
+    /// Value is the redundant encoding
+    RedundantEncode,
 }
 
 impl Display for Error {
@@ -432,6 +444,7 @@ impl Display for Error {
         f.write_str(match self {
             Error::LeadingOnes => "leading ones in vu64 value",
             Error::Truncated => "truncated vu64 value",
+            Error::RedundantEncode => "redundant encoded vu64 value",
         })
     }
 }

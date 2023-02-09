@@ -13,12 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * test status badges into `README.tpl`
 * more tests: `test_u64_3::xxx()`, `test_io::xxx()`
 * more docs: `vu64::io`, `vu64::signed`
+* `xtask`
+* tests: redundant encoding
 
 ### Removed
 * `COPYING`
 
 ### Fixed
 * `LICENSE-APACHE`, `LICENSE-MIT`
+* bug: redundant encode
 
 
 ## [0.1.8] (2023-01-28)

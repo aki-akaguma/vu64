@@ -1,0 +1,9 @@
+[package]
+name = "xtask"
+version = "0.1.0"
+authors = ["aki <aki.akaguma@hotmail.com>"]
+edition = "2021"
+
+[dependencies]
+vu64 = { path=".." }
+anyhow = "1.0"
