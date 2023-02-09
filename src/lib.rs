@@ -5,7 +5,7 @@ This is a simple and fast encoder/decoder.
 # Features
 
 - integer value length compaction
-- minimum support rustc 1.56.1 (59eed8a2a 2021-11-01)
+- minimum support rustc 1.58.1 (db9d1b20b 2022-01-20)
 
 ## format pattern
 
@@ -1174,7 +1174,7 @@ mod test_u64_3 {
     #[test]
     fn vu64_debug_format_1() {
         let vu64 = encode(123456789);
-        assert_eq!(format!("{:#?}", vu64), "V64(123456789)");
+        assert_eq!(format!("{vu64:#?}"), "V64(123456789)");
     }
     #[test]
     fn try_from_1() {
@@ -1212,13 +1212,13 @@ mod test_u64_3 {
         assert!(r.is_err());
         assert_eq!(r, Err(Error::Truncated));
         if let Err(err) = r {
-            assert_eq!(format!("{}", err), "truncated vu64 value");
+            assert_eq!(format!("{err}"), "truncated vu64 value");
         }
         let r = check_result_with_length(9, 123456789);
         assert!(r.is_err());
         assert_eq!(r, Err(Error::LeadingOnes));
         if let Err(err) = r {
-            assert_eq!(format!("{}", err), "leading ones in vu64 value");
+            assert_eq!(format!("{err}"), "leading ones in vu64 value");
         }
     }
 }
