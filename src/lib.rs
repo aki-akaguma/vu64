@@ -995,7 +995,7 @@ mod test_u64_2 {
     }
     #[test]
     fn enc_dec_all_1byte() {
-        for val in 0..128 {
+        let f = |val| {
             assert_eq!(encoded_len(val), 1);
             let encoded = encode(val);
             let encoded_slice = encoded.as_ref();
@@ -1007,11 +1007,20 @@ mod test_u64_2 {
                 decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
                 val
             );
-        }
+        };
+        if cfg!(miri) {
+            for val in [0, 127].into_iter() {
+                f(val);
+            }
+        } else {
+            for val in 0..128 {
+                f(val);
+            }
+        };
     }
     #[test]
     fn enc_dec_all_2byte() {
-        for val in 128..16384 {
+        let f = |val| {
             assert_eq!(encoded_len(val), 2);
             let encoded = encode(val);
             let encoded_slice = encoded.as_ref();
@@ -1023,11 +1032,20 @@ mod test_u64_2 {
                 decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
                 val
             );
-        }
+        };
+        if cfg!(miri) {
+            for val in [128, 16383].into_iter() {
+                f(val);
+            }
+        } else {
+            for val in 128..16384 {
+                f(val);
+            }
+        };
     }
     #[test]
     fn enc_dec_all_3byte() {
-        for val in 16384..2097152 {
+        let f = |val| {
             assert_eq!(encoded_len(val), 3);
             let encoded = encode(val);
             let encoded_slice = encoded.as_ref();
@@ -1039,7 +1057,16 @@ mod test_u64_2 {
                 decode3(encoded_slice[0], u64::from_le_bytes(buf)).unwrap(),
                 val
             );
-        }
+        };
+        if cfg!(miri) {
+            for val in [16384, 2097151].into_iter() {
+                f(val);
+            }
+        } else {
+            for val in 16384..2097152 {
+                f(val);
+            }
+        };
     }
     #[test]
     fn enc_dec_sp1() {
