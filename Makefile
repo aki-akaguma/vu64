@@ -12,6 +12,9 @@ test:
 test-no-default-features:
 	cargo test --offline --no-default-features
 
+miri:
+	cargo +nightly miri test --offline
+
 clean:
 	@cargo clean
 	@rm -f z.*
