@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 * refactored `Makefile`
 
+### Fixed
+* clippy: `len_zero`, `let_unit_value`
+
 
 ## [0.1.9] (2023-02-10)
 ### Added

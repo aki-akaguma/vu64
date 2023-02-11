@@ -3,7 +3,7 @@ use anyhow::Context;
 pub fn run(program: &str, args: &[&str]) -> anyhow::Result<()> {
     //println!("program: {_program}");
     //println!("args: {_args:#?}");
-    if args.len() < 1 {
+    if args.is_empty() {
         print_help_and_exit(program);
     }
     let opt = args[0];
@@ -78,7 +78,7 @@ fn encoder(file_path: &str) -> anyhow::Result<()> {
     let mut temp = [0u8; 8];
     reader.read_exact(&mut temp)?;
     let value = u64::from_le_bytes(temp);
-    let _ = crsr.encode_and_write_vu64(value)?;
+    crsr.encode_and_write_vu64(value)?;
     //
     Ok(())
 }
