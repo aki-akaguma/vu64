@@ -20,7 +20,7 @@ clean:
 	@rm -f z.*
 
 clippy:
-	cargo clippy --offline --tests
+	cargo clippy --offline --tests --workspace
 
 fmt:
 	cargo fmt
