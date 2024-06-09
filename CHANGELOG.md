@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+
+## [0.1.11] (2024-06-09)
 ### Changed
 * rename: `config` to `config.toml`
 
@@ -13,7 +16,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * clippy: clippy::useless_vec
 * clippy: clippy::slow_vector_initialization
 * clippy: clippy::legacy_numeric_constants
-
 
 ## [0.1.10] (2023-02-12)
 ### Added
