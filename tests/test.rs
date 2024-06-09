@@ -18,7 +18,7 @@ mod test_redundant {
     fn decode_bug_2() {
         // at 2023-02-09: Redundant encoding
         // 0xDD: 0b1101_1101
-        let buf = vec![0xDD, 0, 0];
+        let buf = [0xDD, 0, 0];
         let r = vu64::decode2(buf[0], &buf[1..]);
         assert!(
             r.is_err(),
@@ -31,7 +31,7 @@ mod test_redundant {
     fn decode_bug_3() {
         // at 2023-02-09: Redundant encoding
         // 0xDD: 0b1101_1101
-        let buf = vec![0xDD, 0, 0, 0, 0, 0, 0, 0, 0];
+        let buf = [0xDD, 0, 0, 0, 0, 0, 0, 0, 0];
         let mut byte8 = [0u8; 8];
         byte8.copy_from_slice(&buf[1..]);
         let follow_le: u64 = u64::from_le_bytes(byte8);
@@ -46,7 +46,7 @@ mod test_redundant {
     #[test]
     fn decode_dataset() {
         #[rustfmt::skip]
-        let data = vec![
+        let data = [
             [0x8B, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], // 1000_1011
             [0x92, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], // 1001_0010
             [0xA0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], // 1010_0000
