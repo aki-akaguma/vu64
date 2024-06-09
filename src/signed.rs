@@ -120,7 +120,7 @@ mod test_i64 {
     }
     #[test]
     fn enc_dec_max_i64() {
-        let val = core::i64::MAX;
+        let val = i64::MAX;
         assert_eq!(encoded_len(val), 9);
         assert_eq!(
             encode(val).as_ref(),
@@ -130,7 +130,7 @@ mod test_i64 {
     }
     #[test]
     fn enc_dec_min_i64() {
-        let val = core::i64::MIN;
+        let val = i64::MIN;
         assert_eq!(encoded_len(val), 9);
         assert_eq!(
             encode(val).as_ref(),
@@ -140,42 +140,42 @@ mod test_i64 {
     }
     #[test]
     fn enc_dec_max_i32() {
-        let val = core::i32::MAX.into();
+        let val = i32::MAX.into();
         assert_eq!(encoded_len(val), 5);
         assert_eq!(encode(val).as_ref(), &[0xF6, 0xFF, 0xFF, 0xFF, 0x1F]);
         assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
     }
     #[test]
     fn enc_dec_min_i32() {
-        let val = core::i32::MIN.into();
+        let val = i32::MIN.into();
         assert_eq!(encoded_len(val), 5);
         assert_eq!(encode(val).as_ref(), &[0xF7, 0xFF, 0xFF, 0xFF, 0x1F]);
         assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
     }
     #[test]
     fn enc_dec_max_i16() {
-        let val = core::i16::MAX.into();
+        let val = i16::MAX.into();
         assert_eq!(encoded_len(val), 3);
         assert_eq!(encode(val).as_ref(), &[0xDE, 0xFF, 0x07]);
         assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
     }
     #[test]
     fn enc_dec_min_i16() {
-        let val = core::i16::MIN.into();
+        let val = i16::MIN.into();
         assert_eq!(encoded_len(val), 3);
         assert_eq!(encode(val).as_ref(), &[0xDF, 0xFF, 0x07]);
         assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
     }
     #[test]
     fn enc_dec_max_i8() {
-        let val = core::i8::MAX.into();
+        let val = i8::MAX.into();
         assert_eq!(encoded_len(val), 2);
         assert_eq!(encode(val).as_ref(), &[0xBE, 0x03]);
         assert_eq!(decode(encode(val).as_ref()).unwrap(), val);
     }
     #[test]
     fn enc_dec_min_i8() {
-        let val = core::i8::MIN.into();
+        let val = i8::MIN.into();
         assert_eq!(encoded_len(val), 2);
         assert_eq!(encode(val).as_ref(), &[0xBF, 0x03]);
         assert_eq!(decode(encode(val).as_ref()).unwrap(), val);

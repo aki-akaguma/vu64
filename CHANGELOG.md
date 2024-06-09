@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 * clippy: clippy::useless_vec
 * clippy: clippy::slow_vector_initialization
+* clippy: clippy::legacy_numeric_constants
 
 
 ## [0.1.10] (2023-02-12)

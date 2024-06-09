@@ -115,7 +115,7 @@ pub const MAX_LEN8: u64 = 0xFF_FFFF_FFFF_FFFF;
 
 /// Maximun integer whose length of `vu64` is 9 byte.
 #[allow(dead_code)]
-pub const MAX_LEN9: u64 = core::u64::MAX;
+pub const MAX_LEN9: u64 = u64::MAX;
 
 /// Maximum length of a `vu64` in bytes
 pub const MAX_BYTES: usize = 9;
@@ -571,7 +571,7 @@ mod test_u64_1 {
     use super::{MAX_LEN1, MAX_LEN2, MAX_LEN3, MAX_LEN4, MAX_LEN5, MAX_LEN6, MAX_LEN7, MAX_LEN8};
     #[test]
     fn enc_dec_max_u64() {
-        let val = core::u64::MAX;
+        let val = u64::MAX;
         assert_eq!(encoded_len(val), 9);
         let encoded = encode(val);
         let encoded_slice = encoded.as_ref();
@@ -590,7 +590,7 @@ mod test_u64_1 {
     }
     #[test]
     fn enc_dec_max_u32() {
-        let val = core::u32::MAX.into();
+        let val = u32::MAX.into();
         assert_eq!(encoded_len(val), 5);
         let encoded = encode(val);
         let encoded_slice = encoded.as_ref();
@@ -606,7 +606,7 @@ mod test_u64_1 {
     }
     #[test]
     fn enc_dec_max_u16() {
-        let val = core::u16::MAX.into();
+        let val = u16::MAX.into();
         assert_eq!(encoded_len(val), 3);
         let encoded = encode(val);
         let encoded_slice = encoded.as_ref();
@@ -622,7 +622,7 @@ mod test_u64_1 {
     }
     #[test]
     fn enc_dec_max_u8() {
-        let val = core::u8::MAX.into();
+        let val = u8::MAX.into();
         assert_eq!(encoded_len(val), 2);
         let encoded = encode(val);
         let encoded_slice = encoded.as_ref();
