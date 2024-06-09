@@ -141,8 +141,7 @@ mod test_io {
     }
     #[test]
     fn vu64_read_buffer_3() {
-        let mut buf: Vec<u8> = Vec::new();
-        buf.resize(8, 0);
+        let mut buf: Vec<u8> = vec![0; 8];
         //
         let vec: Vec<u8> = vec![0xFF, 0xf0, 0xf0, 0x0f, 0x0f, 0xf0, 0xf0, 0x0f, 0x0f];
         let mut crsr = std::io::Cursor::new(vec);

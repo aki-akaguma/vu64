@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 * rename: `config` to `config.toml`
 
+### Fixed
+* clippy: clippy::useless_vec
+* clippy: clippy::slow_vector_initialization
+
 
 ## [0.1.10] (2023-02-12)
 ### Added
