@@ -314,7 +314,7 @@ pub fn decode_with_length(length: u8, bytes: &[u8]) -> Result<u64, Error> {
             let mut val = 0u64;
             let mut i = length as usize - 1;
             while i > 0 {
-                val = val << 8 | unsafe { *bytes.get_unchecked(i) as u64 };
+                val = (val << 8) | unsafe { *bytes.get_unchecked(i) as u64 };
                 i -= 1;
             }
             let lsb = unsafe { *bytes.get_unchecked(0) } << length;
@@ -325,7 +325,7 @@ pub fn decode_with_length(length: u8, bytes: &[u8]) -> Result<u64, Error> {
         let mut val = 0u64;
         let mut i = length as usize - 1;
         while i > 0 {
-            val = val << 8 | bytes[i] as u64;
+            val = (val << 8) | bytes[i] as u64;
             i -= 1;
         }
         val
@@ -363,7 +363,7 @@ pub fn decode_with_first_and_follow(
         let mut val = 0u64;
         let mut i = follow_len as i32 - 1;
         while i >= 0 {
-            val = val << 8 | follow_bytes[i as usize] as u64;
+            val = (val << 8) | follow_bytes[i as usize] as u64;
             i -= 1;
         }
         let lsb = first_byte << length;
@@ -373,7 +373,7 @@ pub fn decode_with_first_and_follow(
         let mut val = 0u64;
         let mut i = follow_len as i32 - 1;
         while i >= 0 {
-            val = val << 8 | follow_bytes[i as usize] as u64;
+            val = (val << 8) | follow_bytes[i as usize] as u64;
             i -= 1;
         }
         val
