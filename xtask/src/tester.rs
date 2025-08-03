@@ -16,7 +16,7 @@ pub fn run(program: &str, args: &[&str]) -> anyhow::Result<()> {
         "--help" | "-h" | "-H" | "help" => print_help_and_exit(program),
         "--version" | "-V" | "-v" => print_version_and_exit(program),
         _ => {
-            eprintln!("Not fount option: {}", opt);
+            eprintln!("Not fount option: {opt}");
             unreachable!()
         }
     };
@@ -41,7 +41,7 @@ fn print_help_and_exit(program: &str) {
 fn decoder(file_path: &str) -> anyhow::Result<()> {
     use std::io::Read;
     //
-    let f = std::fs::File::open(file_path).context(format!("open(\"{}\")", file_path))?;
+    let f = std::fs::File::open(file_path).context(format!("open(\"{file_path}\")"))?;
     let reader = std::io::BufReader::new(f);
     let mut temp: Vec<u8> = Vec::new();
     for byt in reader.bytes() {
@@ -51,12 +51,12 @@ fn decoder(file_path: &str) -> anyhow::Result<()> {
             //
             let mut s = String::new();
             for a in &temp {
-                s += &format!("0x{:02x}, ", a);
+                s += &format!("0x{a:02x}, ");
             }
             if s.len() > 2 {
                 s = s[..(s.len() - 2)].to_string();
             }
-            println!("[{}]", s);
+            println!("[{s}]");
             //
             let _value = vu64::decode(&temp)?;
             temp.clear();
@@ -73,7 +73,7 @@ fn encoder(file_path: &str) -> anyhow::Result<()> {
     let buf: Vec<u8> = Vec::new();
     let mut crsr = std::io::Cursor::new(buf);
     //
-    let f = std::fs::File::open(file_path).context(format!("open(\"{}\")", file_path))?;
+    let f = std::fs::File::open(file_path).context(format!("open(\"{file_path}\")"))?;
     let mut reader = std::io::BufReader::new(f);
     let mut temp = [0u8; 8];
     reader.read_exact(&mut temp)?;
