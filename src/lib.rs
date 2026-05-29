@@ -227,6 +227,14 @@ pub fn encode(value: u64) -> Vu64 {
         let encoded = value << length as u64;
         bytes[..8].copy_from_slice(&encoded.to_le_bytes());
         let b1st = bytes[0];
+        // This bit manipulation constructs the length prefix in the most significant bits
+        // of the first byte (a sequence of `follow_len` ones followed by a zero),
+        // while preserving the data bits that were shifted into the lower positions.
+        // Logic:
+        // 1. `b1st >> 1` clears the top bit and aligns data.
+        // 2. `!(...)` inverts bits to prepare for prefix shifting.
+        // 3. `>> follow_len` shifts the prepared '0' and trailing '1's into position.
+        // 4. Final `!` inverts everything back, resulting in `1...10` prefix + data.
         bytes[0] = !((!(b1st >> 1)) >> follow_len);
     } else {
         bytes[1..].copy_from_slice(&value.to_le_bytes());

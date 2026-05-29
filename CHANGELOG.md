@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Significant performance optimization for `decode_with_length` and `decode_with_first_and_follow` by replacing byte-by-byte loops with bulk memory loads.
 * Improve robustness of `Vu64` Debug implementation to avoid panics on invalid internal state.
 * Document `Vu64` struct memory footprint and fixed-size buffer storage.
+* Detailed explanatory comments to the `encode` function for bit manipulation logic.
 
 ### Fixed
 * Documentation inaccuracies for `decode`, `decode2`, and `decode3` in `src/lib.rs`.
