@@ -122,7 +122,7 @@ mod test1 {
 
         // Invalid: 2-byte value, but could fit in 1 byte (redundant)
         let val = (1 << 7) - 1;
-        assert_eq!(check_result_with_length(2, val), Err(Error::LeadingOnes));
+        assert_eq!(check_result_with_length(2, val), Err(Error::RedundantEncode));
 
         // Valid: 9-byte value
         let val = u64::MAX;
@@ -130,7 +130,7 @@ mod test1 {
 
         // Invalid: 9-byte value, but could fit in 8 bytes
         let val = (1 << 56) - 1;
-        assert_eq!(check_result_with_length(9, val), Err(Error::LeadingOnes));
+        assert_eq!(check_result_with_length(9, val), Err(Error::RedundantEncode));
     }
 
     #[test]
@@ -298,10 +298,6 @@ mod test1 {
 
         let err = Error::RedundantEncode;
         assert_eq!(format!("{}", err), "redundant encoded vu64 value");
-        assert!(err.source().is_none());
-
-        let err = Error::LeadingOnes;
-        assert_eq!(format!("{}", err), "leading ones in vu64 value");
         assert!(err.source().is_none());
     }
 

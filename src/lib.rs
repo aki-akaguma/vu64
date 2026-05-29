@@ -273,7 +273,7 @@ pub fn check_result_with_length(length: u8, result: u64) -> Result<u64, Error> {
     if length == 1 || result >= (1 << (7 * (length - 1))) {
         Ok(result)
     } else {
-        Err(Error::LeadingOnes)
+        Err(Error::RedundantEncode)
     }
 }
 
@@ -423,20 +423,16 @@ pub fn decode_with_first_and_follow_le(
 /// Error type
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Error {
-    /// Value contains unnecessary leading ones
-    LeadingOnes,
-
     /// Value is truncated / malformed
     Truncated,
 
-    /// Value is the redundant encoding
+    /// Value is the redundant encoding (could be represented in fewer bytes)
     RedundantEncode,
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
-            Error::LeadingOnes => "leading ones in vu64 value",
             Error::Truncated => "truncated vu64 value",
             Error::RedundantEncode => "redundant encoded vu64 value",
         })
@@ -1224,7 +1220,7 @@ mod test_u64_3 {
         assert!(r.is_ok());
         let r = check_result_with_length(9, 123456789);
         assert!(r.is_err());
-        assert_eq!(r, Err(Error::LeadingOnes));
+        assert_eq!(r, Err(Error::RedundantEncode));
     }
     #[test]
     fn error_format_1() {
@@ -1237,9 +1233,9 @@ mod test_u64_3 {
         }
         let r = check_result_with_length(9, 123456789);
         assert!(r.is_err());
-        assert_eq!(r, Err(Error::LeadingOnes));
+        assert_eq!(r, Err(Error::RedundantEncode));
         if let Err(err) = r {
-            assert_eq!(format!("{err}"), "leading ones in vu64 value");
+            assert_eq!(format!("{err}"), "redundant encoded vu64 value");
         }
     }
 }
