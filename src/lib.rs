@@ -382,16 +382,23 @@ pub fn decode_with_first_and_follow_le(
 ) -> Result<u64, Error> {
     let follow_len = length - 1;
     //
+    let mask = if follow_len < 8 {
+        (1u64 << (8 * follow_len)) - 1
+    } else {
+        !0u64
+    };
+    let follow_le = follow_le_max_8_bytes & mask;
+    //
     let result = if follow_len == 0 {
         // 1-byte special case
         first_byte as u64
     } else if follow_len < 7 {
-        let val = u64::from_le(follow_le_max_8_bytes);
+        let val = u64::from_le(follow_le);
         let lsb = first_byte << length;
         ((val << 8) | lsb as u64) >> length
     } else if follow_len == 7 || follow_len == 8 {
         // 8-byte and 9-byte special case
-        u64::from_le(follow_le_max_8_bytes)
+        u64::from_le(follow_le)
     } else {
         unreachable!("length must be 1..=9");
     };
@@ -1234,5 +1241,22 @@ mod test_u64_3 {
         if let Err(err) = r {
             assert_eq!(format!("{err}"), "redundant encoded vu64 value");
         }
+    }
+    #[test]
+    fn decode3_robustness() {
+        use super::decode3;
+        let val = 0x0f0f;
+        let encoded = super::encode(val);
+        let slice = encoded.as_ref();
+        let first_byte = slice[0];
+        let mut follow_le_bytes = [0u8; 8];
+        follow_le_bytes[0] = slice[1];
+
+        let follow_le = u64::from_le_bytes(follow_le_bytes);
+        // Add garbage to higher bytes
+        let follow_le_with_garbage = follow_le | 0xFF00_0000_0000_0000;
+
+        // Should still decode correctly due to masking
+        assert_eq!(decode3(first_byte, follow_le_with_garbage).unwrap(), val);
     }
 }
