@@ -127,6 +127,9 @@ pub const MAX_LEN9: u64 = u64::MAX;
 pub const MAX_BYTES: usize = 9;
 
 /// `vu64`: serialized variable-length 64-bit integers.
+///
+/// It stores the encoded result in a fixed-size internal buffer.
+/// The memory footprint is exactly 10 bytes (9 bytes for the data and 1 byte for the length).
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Vu64 {
     /// Encoded length in bytes
