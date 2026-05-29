@@ -300,40 +300,25 @@ pub fn decode_with_length(length: u8, bytes: &[u8]) -> Result<u64, Error> {
         let val = unsafe { *bytes.get_unchecked(0) as u64 };
         //
         val
-    } else if follow_len < 7 {
+    } else if follow_len < 8 {
+        // 2-8 byte case
+        let mut buf = [0u8; 8];
+        let follow_len_usize = follow_len as usize;
         #[cfg(feature = "vu64_debug")]
-        {
-            let mut val = 0u64;
-            let mut i = length as usize - 1;
-            while i > 0 {
-                val = val << 8 | bytes[i] as u64;
-                i -= 1;
-            }
+        buf[..follow_len_usize].copy_from_slice(&bytes[1..length as usize]);
+        #[cfg(not(feature = "vu64_debug"))]
+        // SAFETY: bytes.len() >= length has been checked. follow_len_usize = length - 1.
+        unsafe {
+            buf.as_mut_ptr()
+                .copy_from_nonoverlapping(bytes.as_ptr().add(1), follow_len_usize);
+        }
+        let val = u64::from_le_bytes(buf);
+        if follow_len < 7 {
             let lsb = bytes[0] << length;
             ((val << 8) | lsb as u64) >> length
+        } else {
+            val
         }
-        #[cfg(not(feature = "vu64_debug"))]
-        {
-            let mut val = 0u64;
-            let mut i = length as usize - 1;
-            while i > 0 {
-                // SAFETY: i starts at length-1 and is checked to be > 0. bytes.len() >= length has been checked.
-                val = (val << 8) | unsafe { *bytes.get_unchecked(i) as u64 };
-                i -= 1;
-            }
-            // SAFETY: bytes.len() >= length (which is > 0) has been checked.
-            let lsb = unsafe { *bytes.get_unchecked(0) } << length;
-            ((val << 8) | lsb as u64) >> length
-        }
-    } else if follow_len == 7 {
-        // 8-byte special case
-        let mut val = 0u64;
-        let mut i = length as usize - 1;
-        while i > 0 {
-            val = (val << 8) | bytes[i] as u64;
-            i -= 1;
-        }
-        val
     } else if follow_len == 8 {
         // 9-byte special case
         u64::from_le_bytes(bytes[1..9].try_into().unwrap())
@@ -361,24 +346,18 @@ pub fn decode_with_first_and_follow(
     let result = if follow_len == 0 {
         // 1-byte special case
         first_byte as u64
-    } else if follow_len < 7 {
-        let mut val = 0u64;
-        let mut i = follow_len as i32 - 1;
-        while i >= 0 {
-            val = (val << 8) | follow_bytes[i as usize] as u64;
-            i -= 1;
+    } else if follow_len < 8 {
+        // 2-8 byte case
+        let mut buf = [0u8; 8];
+        let follow_len_usize = follow_len as usize;
+        buf[..follow_len_usize].copy_from_slice(&follow_bytes[..follow_len_usize]);
+        let val = u64::from_le_bytes(buf);
+        if follow_len < 7 {
+            let lsb = first_byte << length;
+            ((val << 8) | lsb as u64) >> length
+        } else {
+            val
         }
-        let lsb = first_byte << length;
-        ((val << 8) | lsb as u64) >> length
-    } else if follow_len == 7 {
-        // 8-byte special case
-        let mut val = 0u64;
-        let mut i = follow_len as i32 - 1;
-        while i >= 0 {
-            val = (val << 8) | follow_bytes[i as usize] as u64;
-            i -= 1;
-        }
-        val
     } else if follow_len == 8 {
         // 9-byte special case
         u64::from_le_bytes(follow_bytes[0..8].try_into().unwrap())
