@@ -237,9 +237,7 @@ pub fn encode(value: u64) -> Vu64 {
 
 /// Decode `vu64`-encoded bytes to unsigned 64-bit integer.
 ///
-/// Accepts a mutable reference to a slice containing the `vu64`.
-/// Upon success, the reference is updated to begin at the byte immediately
-/// after the encoded `vu64`.
+/// Accepts a slice containing the `vu64`.
 #[inline]
 pub fn decode(bytes: &[u8]) -> Result<u64, Error> {
     if bytes.is_empty() {
@@ -252,9 +250,7 @@ pub fn decode(bytes: &[u8]) -> Result<u64, Error> {
 
 /// Decode `vu64`-encoded bytes to unsigned 64-bit integer.
 ///
-/// Accepts a mutable reference to a slice containing the `vu64`.
-/// Upon success, the reference is updated to begin at the byte immediately
-/// after the encoded `vu64`.
+/// Accepts the first byte and a slice containing the following bytes.
 #[inline]
 pub fn decode2(first_byte: u8, follow_bytes: &[u8]) -> Result<u64, Error> {
     let length = decoded_len(first_byte);
@@ -264,9 +260,7 @@ pub fn decode2(first_byte: u8, follow_bytes: &[u8]) -> Result<u64, Error> {
 
 /// Decode `vu64`-encoded bytes to unsigned 64-bit integer.
 ///
-/// Accepts a mutable reference to a slice containing the `vu64`.
-/// Upon success, the reference is updated to begin at the byte immediately
-/// after the encoded `vu64`.
+/// Accepts the first byte and following bytes as a little-endian `u64`.
 #[inline]
 pub fn decode3(first_byte: u8, follow_le_max_8_bytes: u64) -> Result<u64, Error> {
     let length = decoded_len(first_byte);
