@@ -336,11 +336,7 @@ pub fn decode_with_length(length: u8, bytes: &[u8]) -> Result<u64, Error> {
         unreachable!("length must be 1..=9");
     };
     // check of the redundant encoding
-    if length == 1 || result >= (1 << (7 * (length - 1))) {
-        Ok(result)
-    } else {
-        Err(Error::RedundantEncode)
-    }
+    check_result_with_length(length, result)
 }
 
 pub fn decode_with_first_and_follow(
@@ -375,11 +371,7 @@ pub fn decode_with_first_and_follow(
         unreachable!("length must be 1..=9");
     };
     // check of the redundant encoding
-    if length == 1 || result >= (1 << (7 * (length - 1))) {
-        Ok(result)
-    } else {
-        Err(Error::RedundantEncode)
-    }
+    check_result_with_length(length, result)
 }
 
 #[inline]
@@ -404,11 +396,7 @@ pub fn decode_with_first_and_follow_le(
         unreachable!("length must be 1..=9");
     };
     // check of the redundant encoding
-    if length == 1 || result >= (1 << (7 * (length - 1))) {
-        Ok(result)
-    } else {
-        Err(Error::RedundantEncode)
-    }
+    check_result_with_length(length, result)
 }
 
 /// Error type

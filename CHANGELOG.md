@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * "Maximun" typos in `src/lib.rs`.
 
 ### Changed
+* Consolidated redundant encoding checks across decoding functions into `check_result_with_length`.
 * Consolidate `Error::LeadingOnes` into `Error::RedundantEncode` for clarity and consistency.
 * Improve safety of `unsafe` blocks by adding `// SAFETY` comments and replacing `unreachable_unchecked()` with `unreachable!()`.
 
