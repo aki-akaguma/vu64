@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * New `std` feature to enable `std` dependence.
 * `check` target in `Makefile` to verify all feature combinations.
 * Performance optimization for `TryFrom<&[u8]> for Vu64` by using direct byte copying.
+* Blanket implementations of `ReadVu64` and `WriteVu64` for all types implementing `std::io::Read` or `std::io::Write`.
+* Refactored test suite to accommodate blanket IO trait implementations and remove redundant code.
 
 ### Fixed
 * Documentation inaccuracies for `decode`, `decode2`, and `decode3` in `src/lib.rs`.

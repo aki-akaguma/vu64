@@ -57,9 +57,10 @@ pub trait ReadVu64: std::io::Read {
         match decode_with_first_and_follow(len, byte_1st, &buf[..len as usize - 1]) {
             Ok(i) => Ok(i),
             Err(err) => Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
+                std::io::ErrorKind::InvalidData,
                 format!("{err}"),
             )),
+
         }
     }
     /// reads `vi64` bytes and decods it to `i64`
