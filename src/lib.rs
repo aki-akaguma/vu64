@@ -225,10 +225,7 @@ pub fn encode(value: u64) -> Vu64 {
             // 9-byte special case
             bytes[0] = 0xFF;
         } else {
-            #[allow(unsafe_code)]
-            unsafe {
-                core::hint::unreachable_unchecked()
-            }
+            unreachable!("length must be 1..=9");
         }
     }
     //
@@ -288,6 +285,7 @@ pub fn decode_with_length(length: u8, bytes: &[u8]) -> Result<u64, Error> {
         #[cfg(feature = "vu64_debug")]
         let val = bytes[0] as u64;
         #[cfg(not(feature = "vu64_debug"))]
+        // SAFETY: follow_len == 0 implies length == 1. bytes.len() >= length has been checked above.
         let val = unsafe { *bytes.get_unchecked(0) as u64 };
         //
         val
@@ -308,9 +306,11 @@ pub fn decode_with_length(length: u8, bytes: &[u8]) -> Result<u64, Error> {
             let mut val = 0u64;
             let mut i = length as usize - 1;
             while i > 0 {
+                // SAFETY: i starts at length-1 and is checked to be > 0. bytes.len() >= length has been checked.
                 val = (val << 8) | unsafe { *bytes.get_unchecked(i) as u64 };
                 i -= 1;
             }
+            // SAFETY: bytes.len() >= length (which is > 0) has been checked.
             let lsb = unsafe { *bytes.get_unchecked(0) } << length;
             ((val << 8) | lsb as u64) >> length
         }
@@ -327,10 +327,7 @@ pub fn decode_with_length(length: u8, bytes: &[u8]) -> Result<u64, Error> {
         // 9-byte special case
         u64::from_le_bytes(bytes[1..9].try_into().unwrap())
     } else {
-        #[allow(unsafe_code)]
-        unsafe {
-            core::hint::unreachable_unchecked()
-        }
+        unreachable!("length must be 1..=9");
     };
     // check of the redundant encoding
     if length == 1 || result >= (1 << (7 * (length - 1))) {
@@ -375,10 +372,7 @@ pub fn decode_with_first_and_follow(
         // 9-byte special case
         u64::from_le_bytes(follow_bytes[0..8].try_into().unwrap())
     } else {
-        #[allow(unsafe_code)]
-        unsafe {
-            core::hint::unreachable_unchecked()
-        }
+        unreachable!("length must be 1..=9");
     };
     // check of the redundant encoding
     if length == 1 || result >= (1 << (7 * (length - 1))) {
@@ -407,10 +401,7 @@ pub fn decode_with_first_and_follow_le(
         // 8-byte and 9-byte special case
         u64::from_le(follow_le_max_8_bytes)
     } else {
-        #[allow(unsafe_code)]
-        unsafe {
-            core::hint::unreachable_unchecked()
-        }
+        unreachable!("length must be 1..=9");
     };
     // check of the redundant encoding
     if length == 1 || result >= (1 << (7 * (length - 1))) {

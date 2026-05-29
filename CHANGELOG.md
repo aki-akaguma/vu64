@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 * Consolidate `Error::LeadingOnes` into `Error::RedundantEncode` for clarity and consistency.
+* Improve safety of `unsafe` blocks by adding `// SAFETY` comments and replacing `unreachable_unchecked()` with `unreachable!()`.
 
 
 ## [0.2.0] (2025-09-24)
@@ -19,16 +20,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * more tests
 
 ### Fixed
-* clippy: clippy::uninlined_format_args
+* `clippy::uninlined_format_args`
 
 ## [0.1.11] (2024-06-09)
 ### Changed
 * rename: `config` to `config.toml`
 
 ### Fixed
-* clippy: clippy::useless_vec
-* clippy: clippy::slow_vector_initialization
-* clippy: clippy::legacy_numeric_constants
+* `clippy::useless_vec`
+* `clippy::slow_vector_initialization`
+* `clippy::legacy_numeric_constants`
 
 ## [0.1.10] (2023-02-12)
 ### Added
@@ -38,7 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * refactored `Makefile`
 
 ### Fixed
-* clippy: `len_zero`, `let_unit_value`
+* `clippy::len_zero`
+* `clippy::let_unit_value`
 
 ## [0.1.9] (2023-02-10)
 ### Added
@@ -55,7 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `COPYING`
 
 ### Fixed
-* clippy: `uninlined_format_args`
+* `clippy::uninlined_format_args`
 * rust-version: "1.56.0" to "1.58.0"
 * `LICENSE-APACHE`, `LICENSE-MIT`
 * bug: redundant encode
@@ -67,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 * Makefile: rustc version `1.66.0` to `1.66.1`
-* clippy: `unnecessary_cast`
+* `clippy::unnecessary_cast`
 
 ## [0.1.7] (2023-01-10)
 ### Added
