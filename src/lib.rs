@@ -81,39 +81,39 @@ pub mod signed;
 #[cfg(feature = "io")]
 pub mod io;
 
-/// Maximun integer whose length of `vu64` is 1 byte.
+/// Maximum integer whose length of `vu64` is 1 byte.
 #[allow(dead_code)]
 pub const MAX_LEN1: u64 = 0x7F;
 
-/// Maximun integer whose length of `vu64` is 2 byte.
+/// Maximum integer whose length of `vu64` is 2 byte.
 #[allow(dead_code)]
 pub const MAX_LEN2: u64 = 0x3FFF;
 
-/// Maximun integer whose length of `vu64` is 3 byte.
+/// Maximum integer whose length of `vu64` is 3 byte.
 #[allow(dead_code)]
 pub const MAX_LEN3: u64 = 0x1F_FFFF;
 
-/// Maximun integer whose length of `vu64` is 4 byte.
+/// Maximum integer whose length of `vu64` is 4 byte.
 #[allow(dead_code)]
 pub const MAX_LEN4: u64 = 0x0FFF_FFFF;
 
-/// Maximun integer whose length of `vu64` is 5 byte.
+/// Maximum integer whose length of `vu64` is 5 byte.
 #[allow(dead_code)]
 pub const MAX_LEN5: u64 = 0x07_FFFF_FFFF;
 
-/// Maximun integer whose length of `vu64` is 6 byte.
+/// Maximum integer whose length of `vu64` is 6 byte.
 #[allow(dead_code)]
 pub const MAX_LEN6: u64 = 0x03FF_FFFF_FFFF;
 
-/// Maximun integer whose length of `vu64` is 7 byte.
+/// Maximum integer whose length of `vu64` is 7 byte.
 #[allow(dead_code)]
 pub const MAX_LEN7: u64 = 0x01_FFFF_FFFF_FFFF;
 
-/// Maximun integer whose length of `vu64` is 8 byte.
+/// Maximum integer whose length of `vu64` is 8 byte.
 #[allow(dead_code)]
 pub const MAX_LEN8: u64 = 0xFF_FFFF_FFFF_FFFF;
 
-/// Maximun integer whose length of `vu64` is 9 byte.
+/// Maximum integer whose length of `vu64` is 9 byte.
 #[allow(dead_code)]
 pub const MAX_LEN9: u64 = u64::MAX;
 

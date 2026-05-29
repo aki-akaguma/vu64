@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 * Documentation inaccuracies for `decode`, `decode2`, and `decode3` in `src/lib.rs`.
+* Fixed "Maximun" typos in `src/lib.rs`.
 
 ### Changed
 * Consolidate `Error::LeadingOnes` into `Error::RedundantEncode` for clarity and consistency.
