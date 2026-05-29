@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Blanket implementations of `ReadVu64` and `WriteVu64` for all types implementing `std::io::Read` or `std::io::Write`.
 * Refactored test suite to accommodate blanket IO trait implementations and remove redundant code.
 * Improved semantic accuracy of IO errors by using `ErrorKind::InvalidData` for malformed encoding.
+* Significant performance optimization for `decode_with_length` and `decode_with_first_and_follow` by replacing byte-by-byte loops with bulk memory loads.
 
 ### Fixed
 * Documentation inaccuracies for `decode`, `decode2`, and `decode3` in `src/lib.rs`.
