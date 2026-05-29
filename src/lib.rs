@@ -168,7 +168,12 @@ impl TryFrom<&[u8]> for Vu64 {
 
     #[inline]
     fn try_from(slice: &[u8]) -> Result<Self, Error> {
-        decode(slice).map(Vu64::from)
+        decode(slice).map(|_| {
+            let length = decoded_len(slice[0]);
+            let mut bytes = [0u8; MAX_BYTES];
+            bytes[..length as usize].copy_from_slice(&slice[..length as usize]);
+            Vu64 { length, bytes }
+        })
     }
 }
 
