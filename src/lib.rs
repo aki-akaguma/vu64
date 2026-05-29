@@ -145,7 +145,14 @@ impl AsRef<[u8]> for Vu64 {
 impl Debug for Vu64 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let bytes_ref = self.as_ref();
-        write!(f, "V64({})", decode(bytes_ref).unwrap())
+        match decode(bytes_ref) {
+            Ok(val) => write!(f, "V64({})", val),
+            Err(_) => f
+                .debug_struct("Vu64 (Invalid)")
+                .field("length", &self.length)
+                .field("bytes", &self.bytes)
+                .finish(),
+        }
     }
 }
 
@@ -1180,6 +1187,17 @@ mod test_u64_3 {
     fn vu64_debug_format_1() {
         let vu64 = encode(123456789);
         assert_eq!(format!("{vu64:#?}"), "V64(123456789)");
+    }
+    #[test]
+    fn vu64_debug_format_invalid() {
+        // Manually construct an invalid Vu64 (e.g., redundant encoding)
+        let vu64 = Vu64 {
+            length: 2,
+            bytes: [0x80, 0x00, 0, 0, 0, 0, 0, 0, 0], // Represents 0 in 2 bytes (redundant)
+        };
+        let debug_output = format!("{vu64:?}");
+        assert!(debug_output.contains("Vu64 (Invalid)"));
+        assert!(debug_output.contains("length: 2"));
     }
     #[test]
     fn try_from_1() {
