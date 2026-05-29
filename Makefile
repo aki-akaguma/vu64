@@ -5,6 +5,11 @@ clean:
 	@cargo clean
 	@rm -f z.*
 
+check:
+	cargo check
+	cargo check --no-default-features
+	cargo check --features std
+
 clippy:
 	cargo clippy --offline --tests --workspace
 

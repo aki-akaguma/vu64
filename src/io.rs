@@ -91,6 +91,11 @@ impl<T> WriteVu64 for Cursor<T> where Cursor<T>: Write {}
 
 #[cfg(test)]
 mod test_io {
+    #[cfg(feature = "std")]
+    use std::vec::Vec;
+    #[cfg(feature = "std")]
+    use std::vec;
+
     use super::super::io::{ReadVu64, WriteVu64};
     #[test]
     fn vu64_write_buffer_1() {

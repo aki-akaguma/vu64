@@ -73,6 +73,12 @@ assert_eq!(crsr.get_ref().as_slice(), vec_0.as_slice());
 ```
 
 */
+#![no_std]
+
+#[cfg(any(feature = "std", test))]
+#[macro_use]
+extern crate std;
+
 use core::convert::{TryFrom, TryInto};
 use core::fmt::{self, Debug, Display};
 
@@ -430,6 +436,7 @@ impl Display for Error {
     }
 }
 
+#[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
 #[cfg(test)]
@@ -1178,7 +1185,13 @@ mod test_u64_2 {
 
 #[cfg(test)]
 mod test_u64_3 {
+    #[cfg(feature = "std")]
+    use std::vec::Vec;
+    #[cfg(feature = "std")]
+    use std::vec;
+
     use super::{check_result_with_length, decode, encode, Error, Vu64};
+
     #[test]
     fn vu64_debug_format_1() {
         let vu64 = encode(123456789);
