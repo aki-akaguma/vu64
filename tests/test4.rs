@@ -25,8 +25,6 @@ mod test4 {
         }
     }
 
-    impl WriteVu64 for FailingWriter {}
-
     #[test]
     fn test_write_error_handling() {
         let value = u64::MAX;

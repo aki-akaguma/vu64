@@ -14,11 +14,10 @@ mod test5 {
             let bytes_to_read = self.chunk_size.min(buf.len());
             self.inner.read(&mut buf[..bytes_to_read])
         }
-    }
+        }
 
-    impl<R: Read> ReadVu64 for ChunkedReader<R> {}
+        // A simple writer that appends to a Vec<u8>.
 
-    // A simple writer that appends to a Vec<u8>.
     struct VecWriter {
         buf: Vec<u8>,
     }
@@ -33,8 +32,6 @@ mod test5 {
             Ok(())
         }
     }
-
-    impl WriteVu64 for VecWriter {}
 
     #[test]
     fn test_io_with_custom_reader_and_writer() {

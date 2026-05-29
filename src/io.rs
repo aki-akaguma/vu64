@@ -28,8 +28,7 @@ assert_eq!(crsr.get_ref().as_slice(), vec_0.as_slice());
 */
 use super::signed::zigzag;
 use super::{decode_with_first_and_follow, decoded_len, encode, MAX_BYTES};
-use std::fs::File;
-use std::io::{Cursor, Read, Result, Write};
+use std::io::Result;
 
 /// io read trait of `vu64` and `vi64`
 pub trait ReadVu64: std::io::Read {
@@ -84,10 +83,8 @@ pub trait WriteVu64: std::io::Write {
     }
 }
 
-impl ReadVu64 for File {}
-impl WriteVu64 for File {}
-impl<T> ReadVu64 for Cursor<T> where Cursor<T>: Read {}
-impl<T> WriteVu64 for Cursor<T> where Cursor<T>: Write {}
+impl<R: std::io::Read + ?Sized> ReadVu64 for R {}
+impl<W: std::io::Write + ?Sized> WriteVu64 for W {}
 
 #[cfg(test)]
 mod test_io {

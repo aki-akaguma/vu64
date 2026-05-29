@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Support for `#![no_std]` (can be used with `default-features = false`).
 * New `std` feature to enable `std` dependence.
 * `check` target in `Makefile` to verify all feature combinations.
+* Performance optimization for `TryFrom<&[u8]> for Vu64` by using direct byte copying.
 
 ### Fixed
 * Documentation inaccuracies for `decode`, `decode2`, and `decode3` in `src/lib.rs`.

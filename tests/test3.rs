@@ -21,8 +21,6 @@ mod test3 {
         }
     }
 
-    impl<R: Read> ReadVu64 for OneByteReader<R> {}
-
     #[test]
     fn test_read_one_byte_at_a_time() {
         let values: Vec<u64> = vec![
