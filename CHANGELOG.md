@@ -24,11 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * "Maximun" typos in `src/lib.rs`.
 
 ### Changed
-* Removed `#[allow(dead_code)]` from public `MAX_LEN` constants to clearly define them as part of the public API.
 * Improved robustness of `decode_with_first_and_follow_le` (and `decode3`) by masking input to ignore extraneous higher bits.
 * Consolidated redundant encoding checks across decoding functions into `check_result_with_length`.
 * Consolidate `Error::LeadingOnes` into `Error::RedundantEncode` for clarity and consistency.
 * Improve safety of `unsafe` blocks by adding `// SAFETY` comments and replacing `unreachable_unchecked()` with `unreachable!()`.
+
+### Removed
+* Removed `#[allow(dead_code)]` from public `MAX_LEN` constants to clearly define them as part of the public API.
 
 
 ## [0.2.0] (2025-09-24)
