@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+* Code review report: `docs/reviews/2026-05-30_code_review.2.md`.
 * Support for `#![no_std]` (via `default-features = false`).
 * `std` feature to enable standard library dependence.
 * `check` target in `Makefile` to verify all feature combinations.
