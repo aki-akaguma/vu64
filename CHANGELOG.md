@@ -7,30 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-* Support for `#![no_std]` (can be used with `default-features = false`).
-* New `std` feature to enable `std` dependence.
+* Support for `#![no_std]` (via `default-features = false`).
+* `std` feature to enable standard library dependence.
 * `check` target in `Makefile` to verify all feature combinations.
-* Performance optimization for `TryFrom<&[u8]> for Vu64` by using direct byte copying.
-* Blanket implementations of `ReadVu64` and `WriteVu64` for all types implementing `std::io::Read` or `std::io::Write`.
-* Refactored test suite to accommodate blanket IO trait implementations and remove redundant code.
-* Improved semantic accuracy of IO errors by using `ErrorKind::InvalidData` for malformed encoding.
-* Significant performance optimization for `decode_with_length` and `decode_with_first_and_follow` by replacing byte-by-byte loops with bulk memory loads.
-* Improve robustness of `Vu64` Debug implementation to avoid panics on invalid internal state.
-* Document `Vu64` struct memory footprint and fixed-size buffer storage.
-* Detailed explanatory comments to the `encode` function for bit manipulation logic.
-
-### Fixed
-* Documentation inaccuracies for `decode`, `decode2`, and `decode3` in `src/lib.rs`.
-* "Maximun" typos in `src/lib.rs`.
+* Optimization for `TryFrom<&[u8]> for Vu64` using direct byte copying.
+* Blanket `ReadVu64` and `WriteVu64` traits for all types implementing `std::io::Read`/`Write`.
+* Optimization for `decode_with_length` and `decode_with_first_and_follow` using bulk memory loads.
+* Refactored test suite to accommodate blanket I/O trait implementations.
+* Robustness for `Vu64` Debug implementation to handle invalid internal states.
+* Documentation for `Vu64` memory layout and fixed-size buffer storage.
+* Detailed explanatory comments for bit manipulation logic in `encode`.
 
 ### Changed
-* Improved robustness of `decode_with_first_and_follow_le` (and `decode3`) by masking input to ignore extraneous higher bits.
-* Consolidated redundant encoding checks across decoding functions into `check_result_with_length`.
-* Consolidate `Error::LeadingOnes` into `Error::RedundantEncode` for clarity and consistency.
-* Improve safety of `unsafe` blocks by adding `// SAFETY` comments and replacing `unreachable_unchecked()` with `unreachable!()`.
+* Improved robustness of `decode_with_first_and_follow_le` by masking input.
+* Consolidated redundant encoding checks into `check_result_with_length`.
+* Consolidated `Error::LeadingOnes` into `Error::RedundantEncode`.
+* Improved safety of `unsafe` blocks with `// SAFETY` comments and `unreachable!()`.
+* Updated I/O error mapping to use `ErrorKind::InvalidData` for malformed encoding.
 
 ### Removed
-* Removed `#[allow(dead_code)]` from public `MAX_LEN` constants to clearly define them as part of the public API.
+* `#[allow(dead_code)]` from public `MAX_LEN` constants to clarify public API.
+
+### Fixed
+* Documentation inaccuracies for `decode`, `decode2`, and `decode3`.
+* "Maximun" typos in `src/lib.rs`.
 
 
 ## [0.2.0] (2025-09-24)
@@ -132,8 +132,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * add a signed 64-bits value encoding using zigzag encoding.
 
 ### Changed
-* rewrites decode_with_length() for more speed.
-* rewrites encoded_len() with a const table.
+* rewrites `decode_with_length()` for more speed.
+* rewrites `encoded_len()` with a const table.
 
 ### Fixed
 * redundant: decode().
